@@ -8,7 +8,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import com.tayek.util.Histogram;
-public class Play {
+class Play {
     public enum Result { win, tie, lose }
     public Play(String filename,Double[] prices) { this.filename=filename; this.prices=prices; }
     public static double profit(double boughtAt,double current) {
@@ -85,7 +85,7 @@ public class Play {
         if(false) s+=String.format(", \"%s\"",hProfit());
         return s;
     }
-    public static String header() { return "name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit"; }
+    public static String header() { return "name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit"; }
     public String name() { return filename; }
     public Double bankroll() { return bankroll; }
     public Double eProfit() { return hProfit().mean(); }
@@ -190,7 +190,7 @@ public class Play {
         //static int buffer=5,forecast=3;
         //static double initialBankroll=1;
     }
-    public static void summary(SortedMap<Comparable<?>,Play> map) throws IOException {
+    public static void summary(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         System.out.println("e: "+Play.hExpectation);
         System.out.println("E(profit): "+toString(hExpectation));
         System.out.println("bankroll: "+Play.hBankroll);
@@ -199,7 +199,7 @@ public class Play {
         System.out.println("buy ratel: "+Play.hBuyRate);
         //Play.toConsole(Play.map);
         StringWriter w=Play.toCSV(map);
-        File file=new File("out.csv");
+        File file=new File(filename);
         FileWriter fw=new FileWriter(file);
         fw.write(w.toString());
         fw.close();
@@ -255,7 +255,7 @@ public class Play {
             if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+Play.hBankroll);
         }
         System.out.println("--------------------------------");
-        summary(Play.map);
+        summary(Play.map,"out.csv");
     }
     public static void main(String[] args) throws IOException {
         System.out.println("enter main().");
@@ -276,20 +276,22 @@ public class Play {
         //Play.maxFiles=10;
         MyDate from=new MyDate("2000-01-01");
         MyDate to=new MyDate("2023-01-01");
+        // the above dates do not seem to be used here.
         System.out.println("from: "+from+", to: "+to);
         List<String> files;
         System.out.println(rPath);
         Path path=Paths.get(rPath.toString(),"data","prices");
-        System.out.println(path);
+        System.out.println("files are in: "+path);
         File dir=path.toFile();
         files=Arrays.asList(dir.list());
-        //maxFiles=5;
+        maxFiles=5;
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
         some(path,files,from,to);
         System.out.println("map sze: "+map.size());
         System.out.println("end of processing filenames.");
         System.out.println(skippedFiles+" skipped files.");
+        if(false)
         filenames("newfilenames.txt"); // save filenames in order
         //System.out.println(getFilenames("filenames.txt"));
         System.out.println(System.currentTimeMillis()-t0ms);
@@ -319,6 +321,7 @@ public class Play {
         // maybe  ???
         // initializers and accumulators
     }
+    // initializers
     static long t0ms=System.currentTimeMillis();
     static int startAt=0,minSize=260,maxsize=260;
     static int maxFiles=Integer.MAX_VALUE;
@@ -331,4 +334,5 @@ public class Play {
     static Histogram hExpectation=new Histogram(10,0,1);
     static Histogram hWinRate=new Histogram(10,0,1);
     static Histogram hBuyRate=new Histogram(10,0,1);
+    // some of the above belong in a plays class
 }
