@@ -2,9 +2,8 @@ package q;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import com.tayek.util.Histogram;
-import p.Play;
 class Plays {
-    class Play { }
+    class Play {}
     void run(String[] filenames) {
         for(String filename:filenames) {
             Play x=new Play();
@@ -49,4 +48,6 @@ public class Main {
         xs.run(filenames);
         System.out.println(xs.hBankroll);
     }
+    Plays plays=new Plays();
+    Plays.Play play=plays.new Play();
 }

@@ -12,7 +12,7 @@ class HistogramToStringTestCase {
         histogram.add(1);
         histogram.add(2);
         System.out.println(histogram);
-        System.out.println(Play.toString(histogram));
+        System.out.println(Plays.toString(histogram));
     }
     Histogram histogram=new Histogram();
 }
