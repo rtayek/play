@@ -37,13 +37,10 @@ class MyDateTestCase {
         Date d1=new MyDate(d1s).date();
         Date d2=new MyDate(d2s).date();
         Date d3=new MyDate(d3s).date();
-        System.out.println(d1.getTime());
-        System.out.println(d2.getTime());
-        System.out.println(d3.getTime());
-        int c12=d1.compareTo(d2);
-        int c23=d2.compareTo(d3);
+        //int c12=d1.compareTo(d2);
+        //int c23=d2.compareTo(d3);
         boolean b=inRange(d1,d2,d3);
-        System.out.println(b);
+        assertTrue(b);
     }
 
 }

@@ -28,10 +28,6 @@ class CSVReaderTestCase {
             String expected=words[0];
             String actual=new MyDate(expected).toString2();
             assertEquals(expected,actual);
-            System.out.println(expected+" "+actual);
-            //org.jfree.data.time.Day day=new org.jfree.data.time.Day(date);
-            //System.out.println(words[0]+" "+date+" "+day);
-            //Double.valueOf(words[1]),Double.valueOf(words[2]),Double.valueOf(words[3]),Double.valueOf(words[4]);
         }
     }
     // @formatter:off

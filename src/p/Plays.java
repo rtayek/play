@@ -45,9 +45,9 @@ public class Plays {
             if(verbosity>1) System.out
                     .println(index+", buys: "+buys+", wins: "+wins+", ties "+ties+", losses "+losses+", br: "+bankroll);
         }
-        double oneDay(BiPredicate<Integer,Double[]> buy,int i,double boughtAt) { // one day
+        double oneDay(BiPredicate<Integer,Double[]> strategy,int i,double boughtAt) { // one day
             if(boughtAt==0) { // new buy?
-                if(buy.test(i,prices)) {
+                if(strategy.test(i,prices)) {
                     boughtAt=prices[i-1];
                     double betAmount=bankroll*bet;
                     bankroll-=betAmount;
@@ -98,14 +98,14 @@ public class Plays {
         public Double buyRate() { int n=wins+ties+losses; return n/(double)prices.length; }
         public int days() { return prices.length; }
         public Histogram hProfit() { return hProfit; }
-        void oneStock(BiPredicate<Integer,Double[]> buy) {
+        void oneStock(BiPredicate<Integer,Double[]> strategy) {
             double boughtAt=0;
             if(verbosity>0) System.out.println("-----------------------");
-            System.out.println(prices.length+" prices.");
+            if(verbosity>0) System.out.println(prices.length+" prices.");
             for(int i=buffer;i<prices.length-forecast;++i) {
                 if(verbosity>0) System.out.println("index: "+i+", bankroll: "+bankroll);
                 if(bankroll<0) { System.out.println("broke!"); break; }
-                boughtAt=oneDay(buy,i,boughtAt);
+                boughtAt=oneDay(strategy,i,boughtAt);
                 if(verbosity>0) System.out.println("-----------------------");
                 if(false&&i>=buffer+1) { System.out.println("breaking out after "+i); break; }
             }
@@ -166,11 +166,10 @@ public class Plays {
             // hack key so it's uniqie
             long dt=System.nanoTime()-t0;
             double d=bankroll();
-            double factor=dt/100000000.;
+            double factor=dt/100_000_000.;
             //System.out.println("dt2: "+dt+", factor: "+factor);
             double key=-(bankroll()+factor);
             map.put(key,this);
-            //map.put(filename,this);
         }
         public void prologue() {
             System.out.format("start at: %4d, min:  %4d, nax: %4d\n" //
@@ -189,12 +188,12 @@ public class Plays {
         // make bankroll a list or array?
         public transient Histogram hProfit=new Histogram(10,0,.10);
         public transient double totalRake=0;
-        public final double bet=1; // amount of bankroll to bet.
+        public final double bet=initialBankroll; // amount of bankroll to bet.
         // won't be changing for a while.
         public final Double[] prices;
         public double rake=.0;
         public int verbosity=0;
-    }
+    } // end of class Play
     public static Double[] filter(int start,int stop,Double[] prices) {
         int n=stop-start; // use array copy?
         Double[] p=new Double[n];
@@ -229,31 +228,34 @@ public class Plays {
         fw.write(w.toString());
         fw.close();
     }
-    public void one(String filename,Double[] prices) {
+    public Play one(String filename,Double[] prices,BiPredicate<Integer,Double[]> strategy) {
         // make this use complete path
         // make this independent of chart stuff
         Play play=new Play(filename,prices);
         play.rake=.0;
-        play.oneStock(buy2);
+        play.oneStock(strategy);
         if(play.verbosity>0) play.summary();
         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
-        System.out.println(play);
-        System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
-        System.out.println(play.toCSVLine());
-        System.out.println(play.toString2());
+        if(play.verbosity>0) System.out.println(play);
+        if(play.verbosity>0)
+            System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
+        if(play.verbosity>0) System.out.println(play.toCSVLine());
+        if(play.verbosity>0) System.out.println(play.toString2());
+        return play;
     }
-    public void some(Path path,List<String> filenames,MyDate from,MyDate to) throws IOException {
+    public void some(Path path,List<String> filenames,MyDate from,MyDate to,BiPredicate<Integer,Double[]> strategy)
+            throws IOException {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
         for(int index=0;index<filenames.size();++index) {
-            if(index>maxFiles) break;
+            if(index>=maxFiles) break;
             String filename=filenames.get(index);
             // make this use getPrices in MyDaaset.
             // maybe make a get size? 
             //Double[] prices=getOHLCPrices(filename);
             Double[] prices=getPricesFromR(path,filename,from,to);
             if(prices.length<minSize) { ++skippedFiles; continue; }
-            int length=260; // same as min size for now.
+            int length=260; // same as min size for now. about one year
             if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
             int start=prices.length-length;
             int stop=prices.length;
@@ -263,11 +265,12 @@ public class Plays {
             Play play=new Play(filename,prices);
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
-            play.oneStock(buy2); // buy fails with array out of bounds
+            play.oneStock(strategy); // buy fails with array out of bounds
             System.out.println(play.toString2());
             if(play.verbosity>0) play.summary();
             if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
             //System.out.println("dt: "+(System.nanoTime()-play.t0));
+            // updates will co-mingle different buys.
             play.update();
             //update(hBankroll,hExpectation,map,play);
             if(play!=null&&index==filenames.size()-1) play.prologue();
@@ -276,17 +279,14 @@ public class Plays {
         System.out.println("--------------------------------");
         summary(map,"out.csv");
     }
-    void run() {
-        if(false) {
-            // r file probably uses the same dates already
-            // agrees with apple() in play3.R
-            MyDate from=new MyDate("2016-01-01");
-            MyDate to=new MyDate("2017-01-01");
-            Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
-            // using r file, but the quotes have been removed.
-            one("apple from R",prices);
-            return;
-        }
+    public static List<String> files(Path path) {
+        List<String> files;
+        System.out.println("files are in: "+path);
+        File dir=path.toFile();
+        files=Arrays.asList(dir.list());
+        return files;
+    }
+    void run(BiPredicate<Integer,Double[]> strategy) {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
         // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
@@ -296,22 +296,19 @@ public class Plays {
         MyDate to=new MyDate("2023-01-01");
         // the above dates do not seem to be used here.
         System.out.println("from: "+from+", to: "+to);
-        List<String> files;
-        System.out.println(rPath);
         Path path=Paths.get(rPath.toString(),"data","prices");
-        System.out.println("files are in: "+path);
-        File dir=path.toFile();
-        files=Arrays.asList(dir.list());
-        maxFiles=5;
+        List<String> files=files(path);
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
+        System.out.println("<<<<<<<<<<<<<<<<<<");
         try {
             // this reads file with data made by r program.
-            some(path,files,from,to);
+            some(path,files,from,to,strategy);
         } catch(IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        System.out.println(">>>>>>>>>>>>>>>>>>");
         System.out.println("map sze: "+map.size());
         System.out.println("end of processing filenames.");
         System.out.println(skippedFiles+" skipped files.");
@@ -323,12 +320,13 @@ public class Plays {
         } // save filenames in order
           //System.out.println(getFilenames("filenames.txt"));
     }
-    public static void main(String[] args) throws IOException {
-        System.out.println("enter main().");
-        Plays plays=new Plays();
-        plays.run();
-        System.out.println(System.currentTimeMillis()-plays.t0ms);
-        System.out.println("exit main()");
+    Play appl21016(BiPredicate<Integer,Double[]> strategy) {
+        MyDate from=new MyDate("2016-01-01");
+        MyDate to=new MyDate("2017-01-01");
+        Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
+        // using r file, but the quotes have been removed.
+        Play play=one("apple from R",prices,strategy);
+        return play;
     }
     public static String toString(Histogram histogram) {
         return String.format("min: %5.2f, mean: %5.2f, max: %5.2f" //
@@ -338,6 +336,25 @@ public class Plays {
                 ,Math.sqrt(histogram.variance()) //
         );
     }
+    class Result { Result(String ticker) { this.ticker=ticker; } final String ticker; double br0,br1,br2,br3; }
+    public static void main(String[] args) throws IOException {
+        ArrayList<BiPredicate<Integer,Double[]>> buys=buys();
+        int n=buys.size();
+        Plays[] plays=new Plays[n];
+        for(int i=0;i<n;++i) plays[i]=new Plays();
+        System.out.println("&&&&&&&&&&&&&&&");
+        for(int i=0;i<n;++i) {
+            plays[i].maxFiles=3;
+            plays[i].run(buys.get(i));
+            System.out.println(System.currentTimeMillis()-plays[i].t0ms);
+        }
+        for(int i=0;i<n;++i) {
+            System.out.println(i);
+            Plays play=plays[i];
+            Play.toConsole(play.map);
+        }
+    }
+    int verbosity=0; // for the outer class
     // initializers
     long t0ms=System.currentTimeMillis();
     int startAt=0,minSize=260,maxsize=260;

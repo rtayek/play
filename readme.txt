@@ -26,5 +26,9 @@ so doing play in r and checking with the java  code here.
 
 new notes:
 
+try to see if we can re-initialize a play instance. (probably not a good idea.)
+
+
+
 
 

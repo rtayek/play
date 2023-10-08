@@ -16,14 +16,14 @@ class PlayTestCase {
         Double[] prices=new Double[] {1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
         play=plays.new Play("test",prices);
         play.rake=.01;
-        play.verbosity=2;
+        //play.verbosity=2;
         play.rake=.01;
         if(play.verbosity>0) System.out.println(play);
         play.oneStock(buy0);
         double expectedBankroll=1.37214;
         assertEquals(expectedBankroll,play.bankroll,epsilon);
         if(play.verbosity>0) System.out.println(play);
-        System.out.println(play.totalRake);
+        //System.out.println(play.totalRake);
         double expectedTotalRake=.02188;
         assertEquals(expectedTotalRake,play.totalRake,epsilon);
     }
@@ -31,7 +31,7 @@ class PlayTestCase {
     @Test void testP1() {
         play=plays.new Play("test",p1);
         play.rake=0;
-        play.verbosity=2;
+        //play.verbosity=2;
         play.oneStock(buy);
         assertEquals(0.,play.bankroll);
     }
@@ -47,7 +47,7 @@ class PlayTestCase {
     @Test void testP5() {
         play=plays.new Play("test",p5);
         play.rake=0;
-        play.verbosity=2;
+        //play.verbosity=2;
         play.oneStock(buy);
         assertEquals(1,play.bankroll);
     }

@@ -1,6 +1,14 @@
 package p;
+import java.util.ArrayList;
 import java.util.function.BiPredicate;
 public class Strategy {
+    static public ArrayList<BiPredicate<Integer,Double[]>> buys() {
+        ArrayList<BiPredicate<Integer,Double[]>> buys=new ArrayList<>();
+        buys.add(buy0);
+        buys.add(buy1);
+        buys.add(buy2);
+        return buys;
+    }
     public static void main(String[] args) {}
     public static final BiPredicate<Integer,Double[]> buy0=(index,prices)-> { return true; };
     public static final BiPredicate<Integer,Double[]> buy1=(index,prices)-> {

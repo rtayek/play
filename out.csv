@@ -1,8 +1,5 @@
 name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit
 001570.KS.csv  ,   4.342,  0.02,  0.06,   0.006,  0.60,   0.369,  260
-0037.HK.csv    ,   4.017,  0.04,  0.29,   0.011,  0.22,   0.281,  260
-003610.KS.csv  ,   2.807,  0.01,  0.03,   0.004,  0.57,   0.408,  260
 002410.KS.csv  ,   2.699,  0.02,  0.08,   0.004,  0.52,   0.231,  260
-0038.KL.csv    ,   2.544,  0.01,  0.06,   0.004,  0.54,   0.365,  260
 003075.KS.csv  ,   2.247,  0.02,  0.09,   0.004,  0.41,   0.262,  260
 name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit

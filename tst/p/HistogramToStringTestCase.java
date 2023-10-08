@@ -11,8 +11,7 @@ class HistogramToStringTestCase {
         histogram.add(0);
         histogram.add(1);
         histogram.add(2);
-        System.out.println(histogram);
-        System.out.println(Plays.toString(histogram));
+        assertEquals(1.,histogram.mean());
     }
     Histogram histogram=new Histogram();
 }
