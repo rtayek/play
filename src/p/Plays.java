@@ -306,7 +306,7 @@ public class Plays {
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
         try {
-            // this reads file with data made by r program (setsymbols)
+            // this reads file with data made by r program.
             some(path,files,from,to);
         } catch(IOException e) {
             // TODO Auto-generated catch block
