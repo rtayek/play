@@ -6,7 +6,13 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import static p.DataPaths.*;
+import static p.CSVReader.*;
 class CSVReaderTestCase {
+    String y=yahooPath.toString();
+    @Test void testReadYahooSymbols() {
+        List<String[]> data=read(",",y);
+        assertEquals(106329,data.size());
+    }
     @Test void testReadRFile() {
         String filename="apple.csv";
         MyDate from=new MyDate("2016-01-01");

@@ -32,7 +32,7 @@ public class CSVReader { // and writer
         }
         return rows;
     }
-    private static List<String[]> read(String cvsSplitBy,String csvFile) {
+    static List<String[]> read(String cvsSplitBy,String csvFile) {
         ArrayList<String[]> rows=new ArrayList<>();
         try(BufferedReader br=new BufferedReader(new FileReader(csvFile))) {
             rows=read(cvsSplitBy,br);

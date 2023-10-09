@@ -8,6 +8,23 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import com.tayek.util.Histogram;
+class Stock {
+    Stock(String[] words) {
+        if(words.length>0) ticker=words[0];
+        if(words.length>1) name=words[1];
+        if(words.length>2) exchange=words[2];
+        if(words.length>3) categoryName=words[3];
+        if(words.length>4) country=words[4];
+        if(words.length>5) x=words[5];
+        if(words.length>6) y=words[6];
+        if(words.length>7) z=words[7];
+    }
+    @Override public String toString() {
+        return "Stock [ticker="+ticker+", name="+name+", exchange="+exchange+", categoryName="+categoryName+", country="
+                +country+", x="+x+", y="+y+", z="+z+"]";
+    }
+    String ticker="",name="",exchange="",categoryName="",country="",x="",y="",z="";
+}
 public class Plays {
     class Play {
         public enum Result { win, tie, lose }
@@ -80,7 +97,7 @@ public class Plays {
             return s;
         }
         public String toCSVLine() {
-            String s=String.format("%-15s, %7.3f, %5.2f, %5.2f, %7.3f, %5.2f, %7.3f, %4d", //
+            String s=String.format("%20s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
                     name(),bankroll(),eProfit(),sdProfit(), //
                     pptd(),winRate(),buyRate(),days());
             if(false) s+=String.format(", \"%s\"",hProfit());
@@ -89,6 +106,7 @@ public class Plays {
         public static String header() {
             return "name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
+        // name should be ticker symbol.
         public String name() { return filename; }
         public Double bankroll() { return bankroll; }
         public Double eProfit() { return hProfit().mean(); }
@@ -136,9 +154,22 @@ public class Plays {
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()?
             StringWriter w=new StringWriter();
+            w.write("exchange, ");
             w.write(Play.header()+'\n');
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
+                String name=play.filename;
+                String[] words=name.split(" ");
+                name=words[0];
+                String target=".csv";
+                if(name.endsWith(target)) name=name.substring(0,name.length()-target.length());
+                Stock stock=stocks.get(name);
+                System.out.println(stock);
+                if(true) {
+                    String s=String.format("%-10s",stock.exchange);
+                    w.write(s); 
+                    w.write(", "); 
+                    }
                 w.write(play.toCSVLine());
                 w.write('\n');
             }
@@ -345,17 +376,22 @@ public class Plays {
     }
     class Result { Result(String ticker) { this.ticker=ticker; } final String ticker; double br0,br1,br2,br3; }
     public static void main(String[] args) throws IOException {
+        SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
+                (m,e)->m.put(e.getKey(),e.getValue()),Map::putAll);
+        System.out.println(some);
+        //if(true) return;
         ArrayList<BiPredicate<Integer,Double[]>> buys=buys();
         int n=buys.size();
         Plays[] plays=new Plays[n];
         for(int i=0;i<n;++i) plays[i]=new Plays();
         System.out.println("&&&&&&&&&&&&&&&");
         for(int i=0;i<n;++i) {
-            //plays[i].maxFiles=1000;
+            //plays[i].maxFiles=5;
             plays[i].run(buys.get(i));
             System.out.println(System.currentTimeMillis()-plays[i].t0ms);
         }
-        for(int i=0;i<n;++i) {
+        boolean writeBuys=true;
+        if(writeBuys) for(int i=0;i<n;++i) {
             System.out.println(i);
             Plays plays_=plays[i];
             // StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
@@ -367,8 +403,9 @@ public class Plays {
         }
         SortedMap<Comparable<?>,Play> map=new TreeMap<>();
         for(int i=0;i<n;++i) map.putAll(plays[i].map);
-        //Play.toCsv(map);
-        toCsv(map,"buyall.csv");
+        Play.toCsv(map); // add exchange to this
+        boolean writeBig=true;
+        if(writeBig) toCsv(map,"buyall.csv");
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -384,4 +421,16 @@ public class Plays {
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
+    static final SortedMap<String,String[]> yahooSymbols=new TreeMap<>();
+    static final SortedMap<String,Stock> stocks=new TreeMap<>();
+    static {
+        List<String[]> data=read(",",yahooPath.toString());
+        int n=data.get(0).length;
+        System.out.println(n);
+        for(String[] words:data) {
+            Stock stock=new Stock(words);
+            stocks.put(words[0],stock);
+            yahooSymbols.put(words[0],words);
+        }
+    }
 }
