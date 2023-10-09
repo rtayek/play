@@ -142,13 +142,17 @@ public class Plays {
                 w.write(play.toCSVLine());
                 w.write('\n');
             }
-            w.write(Play.header()+'\n');
+            //w.write(Play.header()+'\n');
             w.close();
             return w;
         }
         public static void toConsole(SortedMap<Comparable<?>,Play> map) {
             System.out.println(Play.header());
             for(Object d:map.keySet()) System.out.println(map.get(d));
+        }
+        public static void toCsv(SortedMap<Comparable<?>,Play> map) {
+            System.out.println(Play.header());
+            for(Object d:map.keySet()) System.out.println(map.get(d).toCSVLine());
         }
         public static List<String> getFilenames(String filename) throws IOException {
             File file=new File(filename);
@@ -182,7 +186,7 @@ public class Plays {
             //static double initialBankroll=1;
         }
         public final long t0=System.nanoTime();
-        public final String filename;
+        public /*final*/ String filename; // so we can change it for different strategies.
         public transient int buys,wins,losses,ties;
         public transient double bankroll=initialBankroll;
         // make bankroll a list or array?
@@ -200,6 +204,15 @@ public class Plays {
         for(int i=start;i<stop;++i) p[i-start]=prices[i];
         return p;
     }
+    static void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
+        if(filename!=null) {
+            StringWriter w=Play.toCSV(map);
+            File file=new File(filename);
+            FileWriter fw=new FileWriter(file);
+            fw.write(w.toString());
+            fw.close();
+        }
+    }
     public void summary(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         System.out.println("e: "+hExpectation);
         System.out.println("E(profit): "+toString(hExpectation));
@@ -208,13 +221,7 @@ public class Plays {
         System.out.println("win ratel: "+hWinRate);
         System.out.println("buy ratel: "+hBuyRate);
         //Play.toConsole(Play.map);
-        if(filename!=null) {
-            StringWriter w=Play.toCSV(map);
-            File file=new File(filename);
-            FileWriter fw=new FileWriter(file);
-            fw.write(w.toString());
-            fw.close();
-        }
+        toCsv(map,filename);
     }
     public void filenames(String filename) throws IOException {
         StringWriter w=new StringWriter();
@@ -344,15 +351,24 @@ public class Plays {
         for(int i=0;i<n;++i) plays[i]=new Plays();
         System.out.println("&&&&&&&&&&&&&&&");
         for(int i=0;i<n;++i) {
-            plays[i].maxFiles=3;
+            //plays[i].maxFiles=1000;
             plays[i].run(buys.get(i));
             System.out.println(System.currentTimeMillis()-plays[i].t0ms);
         }
         for(int i=0;i<n;++i) {
             System.out.println(i);
-            Plays play=plays[i];
-            Play.toConsole(play.map);
+            Plays plays_=plays[i];
+            // StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
+            //void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException { if(filename!=null) {
+            toCsv(plays_.map,"buy"+i+".csv");
         }
+        for(int i=0;i<n;++i) { // mung the filenames
+            for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
+        }
+        SortedMap<Comparable<?>,Play> map=new TreeMap<>();
+        for(int i=0;i<n;++i) map.putAll(plays[i].map);
+        //Play.toCsv(map);
+        toCsv(map,"buyall.csv");
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -361,12 +377,11 @@ public class Plays {
     int maxFiles=Integer.MAX_VALUE;
     int buffer=5,forecast=3;
     double initialBankroll=1;
-    // summary
+    // accumulators
     int skippedFiles=0;
     SortedMap<Comparable<?>,Play> map=new TreeMap<>();
     Histogram hBankroll=new Histogram(10,0,10);
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
-    // some of the above belong in a plays class
 }
