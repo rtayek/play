@@ -1,10 +1,12 @@
 package p;
 import static org.junit.jupiter.api.Assertions.*;
 import static p.DataPaths.*;
+import static p.Plays.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -18,10 +20,7 @@ class OpenCSVTestCase {
     @AfterEach void tearDown() throws Exception {}
     @Test void testReadApple2016() throws IOException,CsvException {
         String filename="apple.csv";
-        Path csvFile=Path.of(rPath.toString(),filename);
-        Reader reader=new FileReader(csvFile.toString());
-        com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-        List<String[]> rows=r.readAll();
+        List<String[]> rows=getCSV(rPath,filename);
         //for(String[] row:rows) System.out.println(Arrays.asList(row));
         System.out.println(rows.size()+" rows");
     }
@@ -35,14 +34,10 @@ class OpenCSVTestCase {
     // data/prices/0093.KL.csv
     // data/prices/009310.KS.csv
     ///data/prices/0099.HK.csv
-
     @Test void testRead1() throws IOException,CsvException {
         Path path=Paths.get(rPath.toString(),"data","prices");
         String filename="001570.KS.csv";
-        Path csvFile=Path.of(path.toString(),filename);
-        Reader reader=new FileReader(csvFile.toString());
-        com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-        List<String[]> rows=r.readAll();
+        List<String[]> rows=getCSV(path,filename);
         //for(String[] row:rows) System.out.println(Arrays.asList(row));
         System.out.println(rows.size()+" rows");
     }
@@ -52,9 +47,7 @@ class OpenCSVTestCase {
         com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
         List<String[]> rows=r.readAll();
         //for(String[] row:rows) System.out.println(Arrays.asList(row));
-        for(String[] row:rows) 
-            if(row.length!=5)
-                System.out.println(Arrays.asList(row));
+        for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
         System.out.println(rows.size()+" rows");
     }
     static int max=10;

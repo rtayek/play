@@ -8,6 +8,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
+import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Histogram;
 public class Plays {
     class Play {
@@ -144,12 +145,17 @@ public class Plays {
                 Play play=map.get(d);
                 String name=play.filename;
                 String[] words=name.split(" ");
-                name=words[0];
+                name=words[0]; // first word of filename?
                 String target=".csv";
-                if(name.endsWith(target)) name=name.substring(0,name.length()-target.length());
+                if(name.endsWith(target)) {
+                    System.out.println("before: "+name);
+                    name=name.substring(0,name.length()-target.length());
+                    System.out.println("after: "+name);
+                }
                 Stock stock=stocks.get(name);
                 System.out.println(stock);
                 if(true) { String s=String.format("%-10s",stock.exchange); w.write(s); w.write(", "); }
+                // get rid of the 10s above
                 w.write(play.toCSVLine());
                 w.write('\n');
             }
@@ -229,8 +235,8 @@ public class Plays {
         System.out.println("E(profit): "+toString(hExpectation));
         System.out.println("bankroll: "+hBankroll);
         System.out.println("bankroll: "+toString(hBankroll));
-        System.out.println("win ratel: "+hWinRate);
-        System.out.println("buy ratel: "+hBuyRate);
+        System.out.println("win rate: "+hWinRate);
+        System.out.println("buy rate: "+hBuyRate);
         //Play.toConsole(Play.map);
         toCsv(map,filename);
     }
@@ -265,13 +271,20 @@ public class Plays {
             throws IOException {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
+        for(int i=0;i<5;++i) System.out.println(filenames.get(i));
         for(int index=0;index<filenames.size();++index) {
             if(index>=maxFiles) break;
             String filename=filenames.get(index);
-            // make this use getPrices in MyDaaset.
+            // make this use getPrices in MyDaaset. done
             // maybe make a get size? 
             //Double[] prices=getOHLCPrices(filename);
-            Double[] prices=getPricesFromR(path,filename,from,to);
+            // 10/27/23 now using open csv for some things
+            Double[] prices=null;
+            if(false) prices=getPricesFromR(path,filename,from,to);
+            else {
+                //
+            }
+            // rewrite an open csv verion of this
             if(prices.length<minSize) { ++skippedFiles; continue; }
             int length=260; // same as min size for now. about one year
             if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
@@ -304,6 +317,14 @@ public class Plays {
         files=Arrays.asList(dir.list());
         return files;
     }
+    public static List<String[]> getCSV(Path path,String filename) throws FileNotFoundException,IOException,CsvException {
+        Path csvFile=Path.of(path.toString(),filename);
+        Reader reader=new FileReader(csvFile.toString());
+        com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
+        List<String[]> rows=r.readAll();
+        return rows;
+    }
+
     void run(BiPredicate<Integer,Double[]> strategy) {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
@@ -361,12 +382,10 @@ public class Plays {
         SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
                 (m,e)->m.put(e.getKey(),e.getValue()),Map::putAll);
         System.out.println("some stocks: "+some);
-        System.out.println("echanges");
-        Stock.printExchanges(); // broken due to comms inside quotes in .csv files.
-        Stock.sort();
-        System.out.println("sorted");
-        Stock.printSorted();
-        if(true) return;
+        //Stock.printExchanges(); // was broken due to commas inside quotes in .csv files.
+        Stock.sortExchangesByFrequency();
+        //Stock.printSortedExchanges();
+        //if(true) return;
         ArrayList<BiPredicate<Integer,Double[]>> buys=buys();
         int n=buys.size();
         Plays[] plays=new Plays[n];
@@ -377,7 +396,7 @@ public class Plays {
             plays[i].run(buys.get(i));
             System.out.println(System.currentTimeMillis()-plays[i].t0ms);
         }
-        boolean writeBuys=true;
+        boolean writeBuys=false; // 10/27/23 temporarily stop writing files 
         if(writeBuys) for(int i=0;i<n;++i) {
             System.out.println(i);
             Plays plays_=plays[i];
