@@ -28,6 +28,15 @@ new notes:
 
 try to see if we can re-initialize a play instance. (probably not a good idea.)
 
+10/25/23 not going so well. still having problems with r reading prices.
+and java has problems reading the yahoosymbols.csv file in /d/data.
+maybe not much point in this until i can read csv data easily. 
+
+so  let's try: https://sourceforge.net/projects/opencsv/
+this seems to work. looks like it reads yahoosymbols.csv just fine.
+
+
+
 
 
 

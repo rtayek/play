@@ -1,4 +1,5 @@
 package p;
+import static p.Stock.*;
 import static p.Plays.Play.Result.*;
 import static p.CSVReader.*;
 import static p.DataPaths.*;
@@ -8,23 +9,6 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
 import com.tayek.util.Histogram;
-class Stock {
-    Stock(String[] words) {
-        if(words.length>0) ticker=words[0];
-        if(words.length>1) name=words[1];
-        if(words.length>2) exchange=words[2];
-        if(words.length>3) categoryName=words[3];
-        if(words.length>4) country=words[4];
-        if(words.length>5) x=words[5];
-        if(words.length>6) y=words[6];
-        if(words.length>7) z=words[7];
-    }
-    @Override public String toString() {
-        return "Stock [ticker="+ticker+", name="+name+", exchange="+exchange+", categoryName="+categoryName+", country="
-                +country+", x="+x+", y="+y+", z="+z+"]";
-    }
-    String ticker="",name="",exchange="",categoryName="",country="",x="",y="",z="";
-}
 public class Plays {
     class Play {
         public enum Result { win, tie, lose }
@@ -165,11 +149,7 @@ public class Plays {
                 if(name.endsWith(target)) name=name.substring(0,name.length()-target.length());
                 Stock stock=stocks.get(name);
                 System.out.println(stock);
-                if(true) {
-                    String s=String.format("%-10s",stock.exchange);
-                    w.write(s); 
-                    w.write(", "); 
-                    }
+                if(true) { String s=String.format("%-10s",stock.exchange); w.write(s); w.write(", "); }
                 w.write(play.toCSVLine());
                 w.write('\n');
             }
@@ -376,10 +356,17 @@ public class Plays {
     }
     class Result { Result(String ticker) { this.ticker=ticker; } final String ticker; double br0,br1,br2,br3; }
     public static void main(String[] args) throws IOException {
+        System.out.println("enter maine()");
+        System.out.println("make some stocks");
         SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
                 (m,e)->m.put(e.getKey(),e.getValue()),Map::putAll);
-        System.out.println(some);
-        //if(true) return;
+        System.out.println("some stocks: "+some);
+        System.out.println("echanges");
+        Stock.printExchanges(); // broken due to comms inside quotes in .csv files.
+        Stock.sort();
+        System.out.println("sorted");
+        Stock.printSorted();
+        if(true) return;
         ArrayList<BiPredicate<Integer,Double[]>> buys=buys();
         int n=buys.size();
         Plays[] plays=new Plays[n];
@@ -421,16 +408,4 @@ public class Plays {
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
-    static final SortedMap<String,String[]> yahooSymbols=new TreeMap<>();
-    static final SortedMap<String,Stock> stocks=new TreeMap<>();
-    static {
-        List<String[]> data=read(",",yahooPath.toString());
-        int n=data.get(0).length;
-        System.out.println(n);
-        for(String[] words:data) {
-            Stock stock=new Stock(words);
-            stocks.put(words[0],stock);
-            yahooSymbols.put(words[0],words);
-        }
-    }
 }

@@ -41,7 +41,9 @@ class Plays {
     static Histogram hWinRate=new Histogram(10,0,1);
     static Histogram hBuyRate=new Histogram(10,0,1);
 }
-public class Main {
+public class UpdateSanityTest {
+    // not sure what this was.
+    // looks like a stand-alone sanity test for update 
     public static void main(String[] args) {
         Plays xs=new Plays();
         String[] filenames=new String[] {"a","b","c"};
