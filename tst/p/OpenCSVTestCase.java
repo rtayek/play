@@ -50,5 +50,4 @@ class OpenCSVTestCase {
         for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
         System.out.println(rows.size()+" rows");
     }
-    static int max=10;
 }

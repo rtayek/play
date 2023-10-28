@@ -73,21 +73,10 @@ public class CSVReader { // and writer
         List<String[]> filtered=readAndFilter(csvFile,from,to);
         return filtered;
     }
-    public static Double[] getClosingPrices(List<String[]> lines) {
-        if(lines==null||lines.size()==0) return new Double[0];
-        int n=lines.size()-1;
-        if(n==0) return new Double[0];
-        Double[] prices=new Double[n];
-        //System.out.println("first row: "+Arrays.asList(lines.get(0)));
-        lines.remove(0);
-        //System.out.println("second row: "+Arrays.asList(lines.get(0)));
-        for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
-        return prices;
-    }
     public static Double[] getPricesFromR(Path path,String filename,MyDate from,MyDate to) {
         List<String[]> lines=fromR(path,filename,from,to); // quotes are removed.
         if(lines.size()==0) return null;
-        Double[] prices=getClosingPrices(lines);
+        Double[] prices=Plays.getClosingPrices(lines);
         return prices;
     }
     public static void main(String[] args) throws IOException {
@@ -107,7 +96,7 @@ public class CSVReader { // and writer
             fw.close();
         }
         // get prices
-        Double[] prices=getClosingPrices(lines);
+        Double[] prices=Plays.getClosingPrices(lines);
         System.out.println(prices[0]);
         System.out.println("close:  "+Arrays.asList(prices));
         System.out.println(prices[prices.length-1]);

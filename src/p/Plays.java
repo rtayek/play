@@ -1,5 +1,6 @@
 package p;
 import static p.Stock.*;
+import static p.Plays.getCSV;
 import static p.Plays.Play.Result.*;
 import static p.CSVReader.*;
 import static p.DataPaths.*;
@@ -148,9 +149,9 @@ public class Plays {
                 name=words[0]; // first word of filename?
                 String target=".csv";
                 if(name.endsWith(target)) {
-                    System.out.println("before: "+name);
+                    //System.out.println("before: "+name);
                     name=name.substring(0,name.length()-target.length());
-                    System.out.println("after: "+name);
+                    //System.out.println("after: "+name);
                 }
                 Stock stock=stocks.get(name);
                 System.out.println(stock);
@@ -230,7 +231,7 @@ public class Plays {
             fw.close();
         }
     }
-    public void summary(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
+    public void summary(SortedMap<Comparable<?>,Play> map,String filename) {
         System.out.println("e: "+hExpectation);
         System.out.println("E(profit): "+toString(hExpectation));
         System.out.println("bankroll: "+hBankroll);
@@ -238,7 +239,11 @@ public class Plays {
         System.out.println("win rate: "+hWinRate);
         System.out.println("buy rate: "+hBuyRate);
         //Play.toConsole(Play.map);
-        toCsv(map,filename);
+        try {
+            toCsv(map,filename);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
     }
     public void filenames(String filename) throws IOException {
         StringWriter w=new StringWriter();
@@ -267,8 +272,7 @@ public class Plays {
         if(play.verbosity>0) System.out.println(play.toString2());
         return play;
     }
-    public void some(Path path,List<String> filenames,MyDate from,MyDate to,BiPredicate<Integer,Double[]> strategy)
-            throws IOException {
+    public void some(Path path,List<String> filenames,MyDate from,MyDate to,BiPredicate<Integer,Double[]> strategy) {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
         for(int i=0;i<5;++i) System.out.println(filenames.get(i));
@@ -282,7 +286,8 @@ public class Plays {
             Double[] prices=null;
             if(false) prices=getPricesFromR(path,filename,from,to);
             else {
-                //
+                List<String[]> rows=getCSV(path,filename);
+                prices=getClosingPrices(rows);
             }
             // rewrite an open csv verion of this
             if(prices.length<minSize) { ++skippedFiles; continue; }
@@ -317,14 +322,31 @@ public class Plays {
         files=Arrays.asList(dir.list());
         return files;
     }
-    public static List<String[]> getCSV(Path path,String filename) throws FileNotFoundException,IOException,CsvException {
-        Path csvFile=Path.of(path.toString(),filename);
-        Reader reader=new FileReader(csvFile.toString());
-        com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-        List<String[]> rows=r.readAll();
-        return rows;
+    public static Double[] getClosingPrices(List<String[]> lines) {
+        if(lines==null||lines.size()==0) return new Double[0];
+        int n=lines.size()-1;
+        if(n==0) return new Double[0];
+        Double[] prices=new Double[n];
+        //System.out.println("first row: "+Arrays.asList(lines.get(0)));
+        lines.remove(0);
+        //System.out.println("second row: "+Arrays.asList(lines.get(0)));
+        for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
+        return prices;
     }
 
+    public static List<String[]> getCSV(Path path,String filename) {
+        Path csvFile=Path.of(path.toString(),filename);
+        Reader reader;
+        List<String[]> rows=null;
+        try {
+            reader=new FileReader(csvFile.toString());
+            com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
+            rows=r.readAll();
+        } catch(IOException|CsvException e) {
+            e.printStackTrace();
+        }
+        return rows;
+    }
     void run(BiPredicate<Integer,Double[]> strategy) {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
@@ -340,13 +362,8 @@ public class Plays {
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
         System.out.println("<<<<<<<<<<<<<<<<<<");
-        try {
-            // this reads file with data made by r program.
-            some(path,files,from,to,strategy);
-        } catch(IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // this reads file with data made by r program.
+        some(path,files,from,to,strategy);
         System.out.println(">>>>>>>>>>>>>>>>>>");
         System.out.println("map sze: "+map.size());
         System.out.println("end of processing filenames.");
