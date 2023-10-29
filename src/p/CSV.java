@@ -1,7 +1,12 @@
 package p;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import com.opencsv.exceptions.CsvException;
 public class CSV { // utilities
     public static void removeExtraQuotes(List<String[]> rows) {
         int index=0;
@@ -21,6 +26,30 @@ public class CSV { // utilities
             if(MyDate.inRange(from,myDate.date(),to)) l.add(line);
         }
         return l;
+    }
+    public static List<String[]> getCSV(Path path,String filename) {
+        Path csvFile=Path.of(path.toString(),filename);
+        Reader reader;
+        List<String[]> rows=null;
+        try {
+            reader=new FileReader(csvFile.toString());
+            com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
+            rows=r.readAll();
+        } catch(IOException|CsvException e) {
+            e.printStackTrace();
+        }
+        return rows;
+    }
+    public static Double[] getClosingPrices(List<String[]> lines) {
+        if(lines==null||lines.size()==0) return new Double[0];
+        int n=lines.size()-1;
+        if(n==0) return new Double[0];
+        Double[] prices=new Double[n];
+        //System.out.println("first row: "+Arrays.asList(lines.get(0)));
+        lines.remove(0);
+        //System.out.println("second row: "+Arrays.asList(lines.get(0)));
+        for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
+        return prices;
     }
     public static void main(String[] args) {
         // TODO Auto-generated method stub

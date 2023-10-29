@@ -112,7 +112,7 @@ class Stock {
             stocks.put(words[0],stock); // maybe  keep this sorted?
         }
         Iterator<String> keys=stocks.keySet().iterator();
-        int samples=5;
+        int samples=0;
         for(int i=0;i<samples;++i) {
             //while(keys.hasNext()) {
             String key=keys.next();

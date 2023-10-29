@@ -2,6 +2,7 @@ package p;
 import static org.junit.jupiter.api.Assertions.*;
 import static p.DataPaths.*;
 import static p.Plays.*;
+import static p.CSV.getCSV;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -59,7 +60,7 @@ class OpenCSVTestCase {
         for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
         System.out.println(rows.size()+" rows");
     }
-    @Test void testReadFromString() throws IOException, CsvException {
+    @Test void testReadFromString() throws IOException,CsvException {
         String string=com.tayek.util.StringUtilities.toString(Arrays.asList(aapl).iterator(),"\n",true);
         BufferedReader br=new BufferedReader(new StringReader(string));
         Reader reader=new StringReader(string);

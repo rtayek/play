@@ -7,6 +7,7 @@ public class Strategy {
         buys.add(buy0);
         buys.add(buy1);
         buys.add(buy2);
+        buys.add(buy3);
         return buys;
     }
     public static void main(String[] args) {}
@@ -23,7 +24,7 @@ public class Strategy {
         double p2=prices[index-2];
         double p3=prices[index-1];
         // add a check for some mimimum increase? 
-        return p1<=p2&&p2<=p3;
+        return p1<p2&&p2<p3;
     };
     public static final BiPredicate<Integer,Double[]> buy3=(index,prices)-> {
         if(index<4) throw new RuntimeException("not enought prices for buy!");
@@ -31,7 +32,7 @@ public class Strategy {
         double p2=prices[index-3];
         double p3=prices[index-2];
         double p4=prices[index-1];
-        return p1<=p2&&p2<=p3&&p3<=p4;
+        return p1<p2&&p2<p3&&p3<p4;
     };
     public static final BiPredicate<Integer,Double[]> buy4=(index,prices)-> {
         if(index<4) throw new RuntimeException("not enought prices for buy!");

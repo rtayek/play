@@ -1,8 +1,7 @@
 package p;
 import static p.Stock.*;
-import static p.Plays.getCSV;
+import static p.CSV.*;
 import static p.Plays.Play.Result.*;
-import static p.CSVReader.*;
 import static p.DataPaths.*;
 import static p.Strategy.*;
 import java.io.*;
@@ -90,7 +89,7 @@ public class Plays {
             return s;
         }
         public static String header() {
-            return "name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
+            return "exchange, name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
         // name should be ticker symbol.
         public String name() { return filename; }
@@ -98,8 +97,16 @@ public class Plays {
         public Double eProfit() { return hProfit().mean(); }
         public Double sdProfit() { return Math.sqrt(hProfit().variance()); }
         public Double pptd() { return hProfit().mean()*hProfit().n()/days(); }
-        public Double winRate() { int n=wins+ties+losses; return wins/(double)n; }
-        public Double buyRate() { int n=wins+ties+losses; return n/(double)prices.length; }
+        public Double winRate() {
+            int n=wins+ties+losses;
+            if(n!=buys) throw new RuntimeException("oops");
+            return wins/(double)n;
+        }
+        public Double buyRate() {
+            int n=wins+ties+losses;
+            if(n!=buys) throw new RuntimeException("oops");
+            return n/(double)prices.length;
+        }
         public int days() { return prices.length; }
         public Histogram hProfit() { return hProfit; }
         void oneStock(BiPredicate<Integer,Double[]> strategy) {
@@ -140,7 +147,6 @@ public class Plays {
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()?
             StringWriter w=new StringWriter();
-            w.write("exchange, ");
             w.write(Play.header()+'\n');
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
@@ -232,6 +238,7 @@ public class Plays {
         }
     }
     public void summary(SortedMap<Comparable<?>,Play> map,String filename) {
+        System.out.println("summary for "+hBankroll.n()+" files");
         System.out.println("e: "+hExpectation);
         System.out.println("E(profit): "+toString(hExpectation));
         System.out.println("bankroll: "+hBankroll);
@@ -275,15 +282,12 @@ public class Plays {
     public void some(Path path,List<String> filenames,MyDate from,MyDate to,BiPredicate<Integer,Double[]> strategy) {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
-        for(int i=0;i<5;++i) System.out.println(filenames.get(i));
+        //for(int i=0;i<5;++i) System.out.println(filenames.get(i));
         for(int index=0;index<filenames.size();++index) {
             if(index>=maxFiles) break;
             String filename=filenames.get(index);
-            // make this use getPrices in MyDaaset. done
-            // maybe make a get size? 
-            //Double[] prices=getOHLCPrices(filename);
-            // 10/27/23 now using open csv for some things
             Double[] prices=null;
+            System.out.println("processing file: "+filename);
             List<String[]> rows=getCSV(path,filename);
             prices=getClosingPrices(rows);
             // rewrite an open csv verion of this
@@ -299,7 +303,7 @@ public class Plays {
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
-            System.out.println(play.toString2());
+            System.out.println("play: "+play.toString2());
             if(play.verbosity>0) play.summary();
             if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
             //System.out.println("dt: "+(System.nanoTime()-play.t0));
@@ -309,7 +313,6 @@ public class Plays {
             if(play!=null&&index==filenames.size()-1) play.prologue();
             if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+hBankroll);
         }
-        System.out.println("--------------------------------");
         summary(map,"out.csv");
     }
     public static List<String> files(Path path) {
@@ -318,30 +321,6 @@ public class Plays {
         File dir=path.toFile();
         files=Arrays.asList(dir.list());
         return files;
-    }
-    public static Double[] getClosingPrices(List<String[]> lines) {
-        if(lines==null||lines.size()==0) return new Double[0];
-        int n=lines.size()-1;
-        if(n==0) return new Double[0];
-        Double[] prices=new Double[n];
-        //System.out.println("first row: "+Arrays.asList(lines.get(0)));
-        lines.remove(0);
-        //System.out.println("second row: "+Arrays.asList(lines.get(0)));
-        for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
-        return prices;
-    }
-    public static List<String[]> getCSV(Path path,String filename) {
-        Path csvFile=Path.of(path.toString(),filename);
-        Reader reader;
-        List<String[]> rows=null;
-        try {
-            reader=new FileReader(csvFile.toString());
-            com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-            rows=r.readAll();
-        } catch(IOException|CsvException e) {
-            e.printStackTrace();
-        }
-        return rows;
     }
     void run(BiPredicate<Integer,Double[]> strategy) {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
@@ -372,17 +351,6 @@ public class Plays {
         } // save filenames in order
           //System.out.println(getFilenames("filenames.txt"));
     }
-    Play appl21016(BiPredicate<Integer,Double[]> strategy) {
-        MyDate from=new MyDate("2016-01-01");
-        MyDate to=new MyDate("2017-01-01");
-        //Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
-        List<String[]> rows=getCSV(rPath,"apple.csv");
-        Double[] prices=getClosingPrices(rows);
-        
-        // using r file, but the quotes have been removed.
-        Play play=one("apple from R",prices,strategy);
-        return play;
-    }
     public static String toString(Histogram histogram) {
         return String.format("min: %5.2f, mean: %5.2f, max: %5.2f" //
                 +", sd: %6.3f",histogram.min() //
@@ -391,14 +359,15 @@ public class Plays {
                 ,Math.sqrt(histogram.variance()) //
         );
     }
-    class Result { Result(String ticker) { this.ticker=ticker; } final String ticker; double br0,br1,br2,br3; }
     public static void main(String[] args) throws IOException {
-        System.out.println("enter maine()");
+        System.out.println("enter main()");
+        /*
         System.out.println("make some stocks");
         SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
                 (m,e)->m.put(e.getKey(),e.getValue()),Map::putAll);
         System.out.println("some stocks: "+some);
-        //Stock.printExchanges(); // was broken due to commas inside quotes in .csv files.
+        */
+        //Stock.printExchanges();
         Stock.sortExchangesByFrequency();
         //Stock.printSortedExchanges();
         //if(true) return;
@@ -406,28 +375,33 @@ public class Plays {
         int n=buys.size();
         Plays[] plays=new Plays[n];
         for(int i=0;i<n;++i) plays[i]=new Plays();
-        System.out.println("&&&&&&&&&&&&&&&");
         for(int i=0;i<n;++i) {
-            //plays[i].maxFiles=5;
+            System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+            plays[i].maxFiles=staticMaxFiles;
             plays[i].run(buys.get(i));
-            System.out.println(System.currentTimeMillis()-plays[i].t0ms);
+            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");
         }
-        boolean writeBuys=false; // 10/27/23 temporarily stop writing files 
+        boolean writeBuys=true; 
         if(writeBuys) for(int i=0;i<n;++i) {
-            System.out.println(i);
             Plays plays_=plays[i];
-            // StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
-            //void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException { if(filename!=null) {
             toCsv(plays_.map,"buy"+i+".csv");
         }
+        boolean writeTickes=true;
+        if(writeTickes) for(int i=0;i<n;++i) {
+            Plays plays_=plays[i];
+            //toCsv(plays_.map,"buy"+i+".csv");
+        }
+        
         for(int i=0;i<n;++i) { // mung the filenames
             for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
         }
+        // combine the different strategies.
         SortedMap<Comparable<?>,Play> map=new TreeMap<>();
-        for(int i=0;i<n;++i) map.putAll(plays[i].map);
-        Play.toCsv(map); // add exchange to this
+        for(int i=0;i<n;++i) map.putAll(plays[i].map); // combine results from different strategies.
+        Play.toCsv(map);
         boolean writeBig=true;
-        if(writeBig) toCsv(map,"buyall.csv");
+        if(writeBig) toCsv(map,"newbuyall.csv");
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -443,4 +417,5 @@ public class Plays {
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
+    static int staticMaxFiles=Integer.MAX_VALUE;
 }

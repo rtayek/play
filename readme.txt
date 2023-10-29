@@ -36,6 +36,26 @@ so  let's try: https://sourceforge.net/projects/opencsv/
 this seems to work. looks like it reads yahoosymbols.csv just fine.
 
 10/28/23 old csv reader code is gone, just using open csv now.
+expected value of profit seems very low for high bankroolls, e.g.
+bankroll files in /d/ray/rapps/getSymbols/data/bankroll.*.csv are old.
+probably made with buy1 or buy2: 
+
+"symbol","bankroll","winRate","buyRate"
+"AMTD","1.1996","0.30769","0.1554"
+
+the buy* files that this java version makes have more info:
+
+exchange, name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit
+ Smith & Turner P.L.C.",      54GW.L.csv, 988380.045,  2.54, 15.68,   2.273,  0.03,   0.896,  260
+TLV       ,     VISN.TA.csv, 12207.343,  4.33, 20.34,   3.401,  0.15,   0.785,  260
+LSE       ,      BMTO.L.csv, 10030.237,  2.29, 14.92,   1.892,  0.04,   0.827,  260
+TLV      
+
+only 1670 price files out of 100k stocks. seems strange. investigate.
+
+
+
+
 
 
 
