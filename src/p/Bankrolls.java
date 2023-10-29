@@ -17,7 +17,7 @@ public class Bankrolls {
         Histogram histogram=new Histogram(10,0,10);
         int total=0;
         SortedMap<Comparable<?>,Integer> map=new TreeMap<>();
-        double threshold=1.05;
+        double threshold=1.30;
         for(String filename:files) if(filename.startsWith("bankroll.")&&filename.endsWith(".csv")) {
             Path csvFile=Path.of(path.toString(),filename);
             System.out.println(csvFile);
@@ -28,7 +28,7 @@ public class Bankrolls {
             for(int i=1;i<rows.size();++i) {
                 String[] row=rows.get(i);
                 double d=Double.valueOf(row[1]);
-                if(d>threshold) {
+                if(d<10) if(d>threshold) {
                     histogram.add(d);
                     System.out.println(row[0]+" "+d);
                 }
@@ -36,7 +36,7 @@ public class Bankrolls {
             System.out.println(rows.size()+" rows");
         }
         System.out.println(total+" stocks from bankroll files.");
-        System.out.println(histogram.n()+" stocks with retunr >= "+threshold);
+        System.out.println(histogram.n()+" stocks with return >= "+threshold);
         System.out.println(histogram);
     }
 }

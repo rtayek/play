@@ -284,11 +284,8 @@ public class Plays {
             //Double[] prices=getOHLCPrices(filename);
             // 10/27/23 now using open csv for some things
             Double[] prices=null;
-            if(false) prices=getPricesFromR(path,filename,from,to);
-            else {
-                List<String[]> rows=getCSV(path,filename);
-                prices=getClosingPrices(rows);
-            }
+            List<String[]> rows=getCSV(path,filename);
+            prices=getClosingPrices(rows);
             // rewrite an open csv verion of this
             if(prices.length<minSize) { ++skippedFiles; continue; }
             int length=260; // same as min size for now. about one year
@@ -333,7 +330,6 @@ public class Plays {
         for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
         return prices;
     }
-
     public static List<String[]> getCSV(Path path,String filename) {
         Path csvFile=Path.of(path.toString(),filename);
         Reader reader;
@@ -379,7 +375,10 @@ public class Plays {
     Play appl21016(BiPredicate<Integer,Double[]> strategy) {
         MyDate from=new MyDate("2016-01-01");
         MyDate to=new MyDate("2017-01-01");
-        Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
+        //Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
+        List<String[]> rows=getCSV(rPath,"apple.csv");
+        Double[] prices=getClosingPrices(rows);
+        
         // using r file, but the quotes have been removed.
         Play play=one("apple from R",prices,strategy);
         return play;

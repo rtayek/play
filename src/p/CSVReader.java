@@ -4,7 +4,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import static p.DataPaths.*;
-public class CSVReader { // and writer
+import static p.CSV.*;
+public class CSVReader{}
+class xCSVReader { // and writer
+    //  get rid of all  of this
     public static StringWriter write(List<String[]> lines) throws IOException {
         StringWriter stringWriter=new StringWriter();
         StringBuffer sb=new StringBuffer();
@@ -40,25 +43,6 @@ public class CSVReader { // and writer
             e.printStackTrace();
         }
         return rows;
-    }
-    public static List<String[]> filter(List<String[]> lines,Date from,Date to) {
-        ArrayList<String[]> l=new ArrayList<>();
-        if(lines.size()>0) l.add(lines.get(0));
-        for(int i=1;i<lines.size();++i) {
-            String[] line=lines.get(i);
-            //System.out.println(Arrays.asList(line));
-            MyDate myDate=new MyDate(line[0]);
-            if(MyDate.inRange(from,myDate.date(),to)) l.add(line);
-        }
-        return l;
-    }
-    public static void removeExtraQuotes(List<String[]> rows) {
-        int index=0;
-        for(String[] row:rows) { stripQuotes(index,row); }
-    }
-    public static void stripQuotes(int index,String[] row) {
-        if(row[index].startsWith("\"")) row[index]=row[index].substring(1);
-        if(row[index].endsWith("\"")) row[index]=row[index].substring(0,row[index].length()-1);
     }
     public static List<String[]> readAndFilter(Path csvFile, MyDate from, MyDate to) {
         List<String[]> data=read(",",csvFile.toString());

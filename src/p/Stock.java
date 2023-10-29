@@ -1,5 +1,4 @@
 package p;
-import static p.CSVReader.read;
 import static p.DataPaths.yahooPath;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -53,9 +52,7 @@ class Stock {
         return "Stock [ticker="+ticker+", name="+name+", exchange="+exchange+", categoryName="+categoryName+", country="
                 +country+", x="+x+", y="+y+", z="+z+"]";
     }
-    static void printExchanges() {
-        for(String x:exchannges.keySet()) 
-            System.out.println(exchannges.get(x)+"\t\t"+x); }
+    static void printExchanges() { for(String x:exchannges.keySet()) System.out.println(exchannges.get(x)+"\t\t"+x); }
     // we have frequencies in the map
     // we do? where?
     // we need to sort the map by frequency
@@ -64,8 +61,7 @@ class Stock {
             int value=exchannges.get(key);
             if(sortedExchanges.containsKey(value)) {
                 System.out.println("duplicate frequency: "+value+" "+key);
-            }
-            else sortedExchanges.put(exchannges.get(key),key);
+            } else sortedExchanges.put(exchannges.get(key),key);
         }
     }
     static void printSortedExchanges() {
@@ -75,25 +71,22 @@ class Stock {
     static List<String[]> readStocks() {
         List<String[]> rows=null;
         Path csvFile=yahooPath;
-        if(false) rows=read(",",yahooPath.toString());
-        else {
-            Reader reader;
+        Reader reader;
+        try {
+            reader=new FileReader(csvFile.toString());
+            com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
             try {
-                reader=new FileReader(csvFile.toString());
-                com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-                try {
-                    rows=r.readAll();
-                    //for(String[] row:rows) System.out.println(Arrays.asList(row));
-                    for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
-                    System.out.println(rows.size()+" rows");
-                } catch(IOException e) {
-                    e.printStackTrace();
-                } catch(CsvException e) {
-                    e.printStackTrace();
-                }
-            } catch(FileNotFoundException e) {
+                rows=r.readAll();
+                //for(String[] row:rows) System.out.println(Arrays.asList(row));
+                for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
+                System.out.println(rows.size()+" rows");
+            } catch(IOException e) {
+                e.printStackTrace();
+            } catch(CsvException e) {
                 e.printStackTrace();
             }
+        } catch(FileNotFoundException e) {
+            e.printStackTrace();
         }
         return rows;
     }

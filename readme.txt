@@ -35,6 +35,8 @@ maybe not much point in this until i can read csv data easily.
 so  let's try: https://sourceforge.net/projects/opencsv/
 this seems to work. looks like it reads yahoosymbols.csv just fine.
 
+10/28/23 old csv reader code is gone, just using open csv now.
+
 
 
 
