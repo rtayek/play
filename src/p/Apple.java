@@ -1,5 +1,6 @@
 package p;
 import static p.DataPaths.rPath;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiPredicate;
 import static p.Strategy.*;
@@ -9,6 +10,7 @@ public class Apple {
     public static Play apple() {
         //Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
         List<String[]> rows=getCSV(rPath,"apple.csv");
+        //for(String[] row:rows) System.out.println(Arrays.asList(row));
         Double[] prices=getClosingPrices(rows);
         //System.out.println(prices.length+" prices.");
         // using r file, but the quotes have been removed. // maybe not

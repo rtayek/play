@@ -13,7 +13,10 @@ import com.tayek.util.Histogram;
 public class Plays {
     class Play {
         public enum Result { win, tie, lose }
-        public Play(String filename,Double[] prices) { this.filename=filename; this.prices=prices; }
+        public Play(String filename) {
+            this.filename=filename;
+            //this.prices=prices;
+        }
         public static double profit(double boughtAt,double current) {
             double profit=(current-boughtAt)/boughtAt;
             return profit;
@@ -120,6 +123,10 @@ public class Plays {
                 if(verbosity>0) System.out.println("-----------------------");
                 if(false&&i>=buffer+1) { System.out.println("breaking out after "+i); break; }
             }
+            if(hProfit.n()==0) {
+                System.out.println("no activity for stock: "+filename);
+                //throw new RuntimeException("no activity for stock: "+filename);
+            }
         }
         void summary() {
             //System.out.println("summary:"); 
@@ -137,7 +144,6 @@ public class Plays {
             StringBuffer s=new StringBuffer();
             for(int i=0;i<arguments.length;i+=2) {
                 if(i>0) s.append(", ");
-                s.append(arguments[i]);
                 if(i+1<arguments.length) s.append(": ").append(arguments[i+1]);
             }
             return s.toString();
@@ -151,20 +157,26 @@ public class Plays {
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
                 String name=play.filename;
-                String[] words=name.split(" ");
-                name=words[0]; // first word of filename?
-                String target=".csv";
-                if(name.endsWith(target)) {
-                    //System.out.println("before: "+name);
-                    name=name.substring(0,name.length()-target.length());
-                    //System.out.println("after: "+name);
+                if(play.hProfit.n()>0) {
+                    String[] words=name.split(" ");
+                    name=words[0]; // first word of filename?
+                    String target=".csv";
+                    if(name.endsWith(target)) {
+                        //System.out.println("before: "+name);
+                        name=name.substring(0,name.length()-target.length());
+                        //System.out.println("after: "+name);
+                    }
+                    Stock stock=stocks.get(name);
+                    //System.out.println(stock);
+                    if(true) { String s=String.format("%-10s",stock.exchange); w.write(s); w.write(", "); }
+                    // get rid of the 10s above
+                    w.write(play.toCSVLine());
+                    w.write('\n');
+                } else {
+                    System.out.println("omitting: "+name); // never prints!
+                    // because empties are not put into plays.map
+                    throw new RuntimeException("omitting: "+name);
                 }
-                Stock stock=stocks.get(name);
-                System.out.println(stock);
-                if(true) { String s=String.format("%-10s",stock.exchange); w.write(s); w.write(", "); }
-                // get rid of the 10s above
-                w.write(play.toCSVLine());
-                w.write('\n');
             }
             //w.write(Play.header()+'\n');
             w.close();
@@ -191,7 +203,7 @@ public class Plays {
             hExpectation.add(hProfit().mean());
             hWinRate.add(winRate());
             hBuyRate.add(buyRate());
-            // hack key so it's uniqie
+            // hack key so it's unique
             long dt=System.nanoTime()-t0;
             double d=bankroll();
             double factor=dt/100_000_000.;
@@ -217,8 +229,8 @@ public class Plays {
         public transient Histogram hProfit=new Histogram(10,0,.10);
         public transient double totalRake=0;
         public final double bet=initialBankroll; // amount of bankroll to bet.
-        // won't be changing for a while.
-        public final Double[] prices;
+        // won't be changing for a while. 10/29/23 maybe not.
+        public transient /*final*/ Double[] prices;
         public double rake=.0;
         public int verbosity=0;
     } // end of class Play
@@ -230,6 +242,7 @@ public class Plays {
     }
     static void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         if(filename!=null) {
+            System.out.println("writing: "+map.size()+" entries to: "+filename);
             StringWriter w=Play.toCSV(map);
             File file=new File(filename);
             FileWriter fw=new FileWriter(file);
@@ -251,6 +264,7 @@ public class Plays {
         } catch(IOException e) {
             e.printStackTrace();
         }
+        System.out.println("end of summary for "+hBankroll.n()+" files");
     }
     public void filenames(String filename) throws IOException {
         StringWriter w=new StringWriter();
@@ -267,8 +281,10 @@ public class Plays {
     public Play one(String filename,Double[] prices,BiPredicate<Integer,Double[]> strategy) {
         // make this use complete path
         // make this independent of chart stuff
-        Play play=new Play(filename,prices);
+        Play play=new Play(filename);
+        play.prices=prices;
         play.rake=.0;
+        play.verbosity=1;
         play.oneStock(strategy);
         if(play.verbosity>0) play.summary();
         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
@@ -290,7 +306,6 @@ public class Plays {
             System.out.println("processing file: "+filename);
             List<String[]> rows=getCSV(path,filename);
             prices=getClosingPrices(rows);
-            // rewrite an open csv verion of this
             if(prices.length<minSize) { ++skippedFiles; continue; }
             int length=260; // same as min size for now. about one year
             if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
@@ -299,17 +314,20 @@ public class Plays {
             prices=filter(start,stop,prices);
             if(prices.length==0) { System.out.println("no prices!"); continue; }
             //System.out.println(prices.length+" prices.");
-            Play play=new Play(filename,prices);
+            Play play=new Play(filename);
+            play.prices=prices;
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
-            System.out.println("play: "+play.toString2());
-            if(play.verbosity>0) play.summary();
-            if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
-            //System.out.println("dt: "+(System.nanoTime()-play.t0));
-            // updates will co-mingle different buys.
-            play.update();
-            //update(hBankroll,hExpectation,map,play);
+            //System.out.println("play: "+play.toString2());
+            if(play.hProfit.n()>0) {
+                if(play.verbosity>0) play.summary();
+                if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
+                //System.out.println("dt: "+(System.nanoTime()-play.t0));
+                // updates will co-mingle different buys.
+                play.update();
+                //update(hBankroll,hExpectation,map,play);
+            }
             if(play!=null&&index==filenames.size()-1) play.prologue();
             if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+hBankroll);
         }
@@ -375,14 +393,16 @@ public class Plays {
         int n=buys.size();
         Plays[] plays=new Plays[n];
         for(int i=0;i<n;++i) plays[i]=new Plays();
+        // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
+            //plays[i].maxFiles=10;
             plays[i].run(buys.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");
         }
-        boolean writeBuys=true; 
+        boolean writeBuys=true;
         if(writeBuys) for(int i=0;i<n;++i) {
             Plays plays_=plays[i];
             toCsv(plays_.map,"buy"+i+".csv");
@@ -392,14 +412,13 @@ public class Plays {
             Plays plays_=plays[i];
             //toCsv(plays_.map,"buy"+i+".csv");
         }
-        
         for(int i=0;i<n;++i) { // mung the filenames
             for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
         }
         // combine the different strategies.
         SortedMap<Comparable<?>,Play> map=new TreeMap<>();
         for(int i=0;i<n;++i) map.putAll(plays[i].map); // combine results from different strategies.
-        Play.toCsv(map);
+        //Play.toCsv(map);
         boolean writeBig=true;
         if(writeBig) toCsv(map,"newbuyall.csv");
     }

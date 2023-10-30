@@ -12,9 +12,10 @@ class PlayTestCase {
     @BeforeEach void setUpn() throws Exception { plays.buffer=3; }
     @AfterEach void tearDown() throws Exception {}
     @Test void testAdjustBankrollForR() {
-        plays.buffer=5;
+        plays.buffer=5; //  5 is now the default
         Double[] prices=new Double[] {1.,2.,3.,4.,5.,6.,7.,8.,9.,10.};
-        play=plays.new Play("test",prices);
+        play=plays.new Play("test");
+        play.prices=prices;
         play.rake=.01;
         //play.verbosity=2;
         play.rake=.01;
@@ -29,23 +30,38 @@ class PlayTestCase {
     }
     static double epsilon=1e-6;
     @Test void testP1() {
-        play=plays.new Play("test",p1);
+        play=plays.new Play("test");
+        play.prices=p1;
         play.rake=0;
         //play.verbosity=2;
         play.oneStock(buy);
         assertEquals(0.,play.bankroll);
     }
-    @Test void testP2() { play=plays.new Play("test",p2); play.rake=0; play.oneStock(buy); assertEquals(1,play.bankroll); }
-    @Test void testP3() { play=plays.new Play("test",p3); play.rake=0; play.oneStock(buy); assertEquals(2,play.bankroll); }
+    @Test void testP2() {
+        play=plays.new Play("test"); 
+        play.prices=p2;
+        play.rake=0; 
+        play.oneStock(buy);
+        assertEquals(1,play.bankroll);
+        }
+    @Test void testP3() {
+        play=plays.new Play("test");
+        play.prices=p3;
+        play.rake=0; 
+        play.oneStock(buy);
+        assertEquals(2,play.bankroll);
+        }
     @Test void testP4() {
-        play=plays.new Play("test",p4);
+        play=plays.new Play("test");
+        play.prices=p4;
         play.rake=0;
         play.bankroll=2;
         play.oneStock(buy);
         assertEquals(4,play.bankroll);
     }
     @Test void testP5() {
-        play=plays.new Play("test",p5);
+        play=plays.new Play("test");
+        play.prices=p5;
         play.rake=0;
         //play.verbosity=2;
         play.oneStock(buy);
@@ -62,6 +78,7 @@ class PlayTestCase {
     Plays plays=new Plays();
     Play play;
     BiPredicate<Integer,Double[]> buy=buy2;
+    // note: p1-p5 are not related to the buying strategies.
     static final Double[] p1=new Double[] {1.,2.,3.,0.,0.,0.,0.};
     static final Double[] p2=new Double[] {1.,2.,3.,3.,0.,0.,0.};
     static final Double[] p3=new Double[] {1.,2.,3.,6.,0.,0.,0.};

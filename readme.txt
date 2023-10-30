@@ -53,6 +53,24 @@ TLV
 
 only 1670 price files out of 100k stocks. seems strange. investigate.
 
+maybe try to construct play earlier and set prices later?
+made prices non final, so we can do this since 
+made prices transient and remove prices from constructor.
+is this what we wan to do to move the constructor calls up?
+
+prices is only needed in when we call oneStock and afterwards.
+so maybe set if before calling prices? - we are doing that. 
+we don't need the prices until we call oneStock.
+true, but maybe it  does not matter unless we really want to run more than one stock.
+maybe just have some call One?
+
+soomehow got some nans from buy4 (i think). can not reproduce.
+
+ 
+
+
+
+
 
 
 
