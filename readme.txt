@@ -73,6 +73,8 @@ what to do next. use the few hundred that are in buy3b?
 got r code to make new price files. the are in DataPaths: Path newPrices=Path.of("e:\\data");
 we only have 1538 new prices, but r is making the rest. so we can use these now.
 
++we need to add a date to the data frame. maybe include the data in the filename
+
  
 
 

@@ -264,7 +264,6 @@ public class Plays {
     }
     public Play one(String filename,Double[] prices,BiPredicate<Integer,Double[]> strategy) {
         // make this use complete path
-        // make this independent of chart stuff
         // filename is not really the filename
         Play play=new Play(filename);
         play.prices=prices;
@@ -329,8 +328,6 @@ public class Plays {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
         // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
-        //Play.maxFiles=999;
-        //Play.maxFiles=100;
         MyDate from=new MyDate("2000-01-01");
         MyDate to=new MyDate("2023-01-01");
         // the above dates do not seem to be used here.
@@ -383,7 +380,7 @@ public class Plays {
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
-            plays[i].maxFiles=100;
+            //plays[i].maxFiles=100;
             plays[i].run(buys.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");
