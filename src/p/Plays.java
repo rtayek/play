@@ -132,26 +132,10 @@ public class Plays {
             //System.out.println("summary:"); 
             System.out.println(this.toString2());
         }
-        public static String toLine(String[] names,Object[] objects) {
-            StringBuffer s=new StringBuffer();
-            for(int i=0;i<names.length;++i) {
-                if(i>0) s.append(", ");
-                s.append(names[i]).append(": ").append(objects[i]);
-            }
-            return s.toString();
-        }
-        public static String toLine(Object... arguments) {
-            StringBuffer s=new StringBuffer();
-            for(int i=0;i<arguments.length;i+=2) {
-                if(i>0) s.append(", ");
-                if(i+1<arguments.length) s.append(": ").append(arguments[i+1]);
-            }
-            return s.toString();
-        }
         //public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
         // }
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
-            // maybe use values()?
+            // maybe use values()? - just the Play[]?
             StringWriter w=new StringWriter();
             w.write(Play.header()+'\n');
             for(Object d:map.keySet()) {
@@ -243,7 +227,7 @@ public class Plays {
     static void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         if(filename!=null) {
             System.out.println("writing: "+map.size()+" entries to: "+filename);
-            StringWriter w=Play.toCSV(map);
+            StringWriter w=Play.toCSV(map); // maybe pass values in?
             File file=new File(filename);
             FileWriter fw=new FileWriter(file);
             fw.write(w.toString());
@@ -281,10 +265,11 @@ public class Plays {
     public Play one(String filename,Double[] prices,BiPredicate<Integer,Double[]> strategy) {
         // make this use complete path
         // make this independent of chart stuff
+        // filename is not really the filename
         Play play=new Play(filename);
         play.prices=prices;
         play.rake=.0;
-        play.verbosity=1;
+        //play.verbosity=1;
         play.oneStock(strategy);
         if(play.verbosity>0) play.summary();
         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
@@ -303,8 +288,8 @@ public class Plays {
             if(index>=maxFiles) break;
             String filename=filenames.get(index);
             Double[] prices=null;
-            System.out.println("processing file: "+filename);
             List<String[]> rows=getCSV(path,filename);
+            System.out.println("file: "+filename+" has data from: "+rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
             prices=getClosingPrices(rows);
             if(prices.length<minSize) { ++skippedFiles; continue; }
             int length=260; // same as min size for now. about one year
@@ -345,12 +330,13 @@ public class Plays {
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
         // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
         //Play.maxFiles=999;
-        //Play.maxFiles=10;
+        //Play.maxFiles=100;
         MyDate from=new MyDate("2000-01-01");
         MyDate to=new MyDate("2023-01-01");
         // the above dates do not seem to be used here.
         System.out.println("from: "+from+", to: "+to);
         Path path=Paths.get(rPath.toString(),"data","prices");
+        path=newPrices;
         List<String> files=files(path);
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
@@ -397,7 +383,7 @@ public class Plays {
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
-            //plays[i].maxFiles=10;
+            plays[i].maxFiles=100;
             plays[i].run(buys.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");

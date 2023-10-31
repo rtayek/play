@@ -1,4 +1,6 @@
 package p;
+import static p.CSV.getCSV;
+import static p.DataPaths.newPrices;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -40,6 +42,12 @@ public class CSV { // utilities
         }
         return rows;
     }
+    public static List<String[]> getNewPrices(String ticker) {
+        String filename=ticker+".csv";
+        List<String[]> rows=getCSV(newPrices,filename);
+        //System.out.println(ticker+" has: "+rows.size()+" rows");
+        return rows;
+    }
     public static Double[] getClosingPrices(List<String[]> lines) {
         if(lines==null||lines.size()==0) return new Double[0];
         int n=lines.size()-1;
@@ -50,6 +58,22 @@ public class CSV { // utilities
         //System.out.println("second row: "+Arrays.asList(lines.get(0)));
         for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
         return prices;
+    }
+    public static String toLine(String[] names,Object[] objects) {
+        StringBuffer s=new StringBuffer();
+        for(int i=0;i<names.length;++i) {
+            if(i>0) s.append(", ");
+            s.append(names[i]).append(": ").append(objects[i]);
+        }
+        return s.toString();
+    }
+    public static String toLine(Object... arguments) {
+        StringBuffer s=new StringBuffer();
+        for(int i=0;i<arguments.length;i+=2) {
+            if(i>0) s.append(", ");
+            if(i+1<arguments.length) s.append(": ").append(arguments[i+1]);
+        }
+        return s.toString();
     }
     public static void main(String[] args) {
         // TODO Auto-generated method stub

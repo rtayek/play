@@ -64,7 +64,14 @@ we don't need the prices until we call oneStock.
 true, but maybe it  does not matter unless we really want to run more than one stock.
 maybe just have some call One?
 
-soomehow got some nans from buy4 (i think). can not reproduce.
+somehow got some nans from buy4 (i think). can not reproduce.
+
+stopped adding run results if there were no buys.
+
+what to do next. use the few hundred that are in buy3b?
+
+got r code to make new price files. the are in DataPaths: Path newPrices=Path.of("e:\\data");
+we only have 1538 new prices, but r is making the rest. so we can use these now.
 
  
 

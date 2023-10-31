@@ -1,6 +1,7 @@
 package p;
 import static p.DataPaths.kagglePath;
 import static p.Strategy.*;
+import static p.CSV.*;
 import p.Plays;
 import p.Plays.Play;
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,12 +68,12 @@ class PlayTestCase {
         play.oneStock(buy);
         assertEquals(1,play.bankroll);
     }
-    @Test void testEmpty() { String s=Play.toLine(); assertEquals("",s); }
-    @Test void testPartOfOne() { String s=Play.toLine("foo"); assertEquals("foo",s); }
-    @Test void testOne() { String foo="foo"; String s=Play.toLine("foo",foo); assertEquals("foo: foo",s); }
+    @Test void testEmpty() { String s=toLine(); assertEquals("",s); }
+    @Test void testPartOfOne() { String s=toLine("foo"); assertEquals("foo",s); }
+    @Test void testOne() { String foo="foo"; String s=toLine("foo",foo); assertEquals("foo: foo",s); }
     @Test void testTwo() {
         String foo="foo",bar="bar";
-        String s=Play.toLine("foo",foo,"bar",bar);
+        String s=toLine("foo",foo,"bar",bar);
         assertEquals("foo: foo, bar: bar",s);
     }
     Plays plays=new Plays();

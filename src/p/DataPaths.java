@@ -5,6 +5,7 @@ public class DataPaths {
     public static void main(String[] args) {
         System.out.println("in main()");
     }
+    public static final Path newPrices=Path.of("e:\\data");
     public static final Path yahooPath=Path.of("D:\\data\\yahoodata\\yahoosymbols.csv\\");
     public static final Path rPath=Path.of("D:\\ray\\rapps\\getSymbols\\");
     public static final Path kagglePath=Path.of("D:\\data\\kagglestock\\Stocks\\");

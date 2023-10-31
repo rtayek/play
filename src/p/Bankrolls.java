@@ -10,6 +10,7 @@ import java.util.*;
 import com.opencsv.exceptions.CsvException;
 import p.Plays.Play;
 public class Bankrolls {
+    // this is reading old bankroll files probably made with buy2
     public static void main(String[] args) throws IOException,CsvException {
         Path path=Paths.get(rPath.toString(),"data");
         File dir=path.toFile();
