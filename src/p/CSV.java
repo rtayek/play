@@ -124,14 +124,9 @@ public class CSV { // utilities
         play.prices=new Double[] {1.,2.,3.};
         System.out.println(play);
         System.out.println("header: "+result.header());
-        Object[] arguments=new Object[] {play.exchange(),
-                // need  buy, date,
-                play.ticker(), // should be ticker
-                // no, we now have ticker and filename
-                // maybe just use ticker and add filename
-                play.bankroll(),play.eProfit(),play.sdProfit(),play.pptd(),play.winRate(),play.buyRate(),play.days(),};
+        Object[] arguments=play.arguments();
         System.out.println("result: "+result.toString(arguments));
-        //System.out.println(result);
+        System.out.println(result);
     }
     ArrayList<Pair> pairs=new ArrayList<>();
     String[] names=new String[pairs.size()];

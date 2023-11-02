@@ -13,9 +13,13 @@ import com.tayek.util.Histogram;
 public class Plays {
     class Play {
         public enum Result { win, tie, lose }
-        public Play(String fileename) { // this is a filename i.e. AAPL.csv
+        public Play(String filename) { // this is a filename i.e. AAPL.csv
             // and not AAPL which was why we could not find
-            this.filename=fileename;
+            this.filename=filename;
+            // this variable is not used as a filename!
+            // we mung it later so  we can tell what buy was used.
+            // we will add buy and date to the summary line.
+            // so  add these and stop munging the filename.
             ticker=removeTarget(filename,".csv");
             Stock stock=stocks.get(ticker);
             if(stock!=null) exchange=stock.exchange;
@@ -85,20 +89,22 @@ public class Plays {
                     +eProfit()+", sdProfit()="+sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()+", buyRate()="
                     +buyRate()+", days()="+days()+", hProfit()="+hProfit()+"]";
         }
-        public String toString2() { // this is the summary
-            String s=String.format(
-                    "exchange(): %3s, ticker: %10s, bankroll: %7.3f, eProfit: %5.2f, sdProfit: %5.2f, pptd: %7.3f, winRate: %5.2f, buyRate: %7.3f, days: %4d",
-                    exchange(),ticker(),bankroll(),eProfit(),sdProfit(), //
-                    pptd(),winRate(),buyRate(),days());
-            return s;
-        }       
+        Object[] arguments() {
+            Object[] arguments=new Object[] {exchange(),
+                    ticker(),
+                    // need  buy, date,
+                    // no, we now have ticker and filename
+                    // maybe just use ticker and add filename
+                    bankroll(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
+            return arguments;
+        }
         public String toCSVLine() {
             String s=result.toString(arguments());
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
         }
         public static String header() {
-            return "exchange, name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
+            return "exchange, ticker, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
         // name should be ticker symbol.
         public String exchange() { return exchange; }
@@ -138,29 +144,19 @@ public class Plays {
         }
         //public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
         // }
-        Object[] arguments() {
-            Object[] arguments=new Object[] {exchange(),
-                    // need  buy, date,
-                    ticker(), // should be ticker
-                    // no, we now have ticker and filename
-                    // maybe just use ticker and add filename
-                    bankroll(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
-            return arguments;
-        }
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()? - just the Play[]?
             StringWriter w=new StringWriter();
             w.write(Play.header()+'\n');
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
-                String filename=play.filename;
                 if(play.hProfit.n()>0) {
                     w.write(play.toCSVLine());
                     w.write('\n');
                 } else {
-                    System.out.println("omitting: "+play.filename); // never prints!
+                    System.out.println("omitting: "+play.ticker()+" add buy, add date"); // never prints!
                     // because empties are not put into plays.map
-                    throw new RuntimeException("omitting: "+play.filename);
+                    throw new RuntimeException("omitting: "+play.ticker());
                 }
             }
             //w.write(Play.header()+'\n');
@@ -197,8 +193,7 @@ public class Plays {
             Random r=new Random();
             double x=r.nextGaussian(0,1e-7);
             key=-bankroll()+x;
-            if(map.containsKey(key))
-                throw new RuntimeException("dup;licate key!");
+            if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
             map.put(key,this);
         }
         public void prologue() {
@@ -262,7 +257,8 @@ public class Plays {
         StringWriter w=new StringWriter();
         for(Object d:map.keySet()) {
             Play play=map.get(d);
-            w.write(play.filename);
+            w.write(play.filename()); // may need to add buy and date!
+            // no, this variable is not used as a filename!
             w.write('\n');
         }
         File file=new File(filename);
@@ -278,14 +274,11 @@ public class Plays {
         play.rake=.0;
         //play.verbosity=1;
         play.oneStock(strategy);
-        if(play.verbosity>0) //System.out.println("summary:"); 
-            System.out.println(play.toString2());
-        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
         if(play.verbosity>0) System.out.println(play);
+        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
         if(play.verbosity>0)
             System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
         if(play.verbosity>0) System.out.println(play.toCSVLine());
-        if(play.verbosity>0) System.out.println(play.toString2());
         return play;
     }
     public void some(Path path,List<String> filenames,MyDate from,MyDate to,Strategy strategy) {
@@ -313,21 +306,11 @@ public class Plays {
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
-            System.out.println("<<<<<");
-            System.out.println(result.header());
-            System.out.println("to csv:  "+play.toCSVLine());
-            System.out.println("toString2: "+play.toString2());
-            System.out.println("toString; "+play.toString());
-            System.out.println("csv result; "+result.toString(play.arguments()));
-            System.out.println(">>>>>");
             if(play.hProfit.n()>0) {
-                if(play.verbosity>0) //System.out.println("summary:"); 
-                    System.out.println(play.toString2());
                 if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
                 //System.out.println("dt: "+(System.nanoTime()-play.t0));
                 // updates will co-mingle different buys.
                 play.update();
-                //update(hBankroll,hExpectation,map,play);
             }
             if(play!=null&&index==filenames.size()-1) play.prologue();
             if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+hBankroll);
@@ -416,6 +399,7 @@ public class Plays {
         }
         for(int i=0;i<n;++i) { // mung the filenames
             for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
+        // this adds the buy index to the filename
         }
         // combine the different strategies.
         SortedMap<Comparable<?>,Play> map=new TreeMap<>();

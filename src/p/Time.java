@@ -20,7 +20,7 @@ public class Time {
             Plays plays=new Plays();
             Play play=plays.one(ticker,prices,strategy3);
             //System.out.println("summary:"); 
-            System.out.println(play.toString2());
+            System.out.println(play.toCSVLine());
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
     }
