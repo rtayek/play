@@ -98,6 +98,7 @@ class Stock {
     // Ticker,Name,Exchange,Category Name,Country
     static final int tickerINdex=0,nameIndex=1,exchangeIndex=2,categoryIndex=3,countryIndex=4;
     static final TreeMap<String,Stock> stocks=new TreeMap<>(); // map from ticker to stock.
+    // maybe use unique combination of ticker, strategy, start date?
     static final TreeMap<String,Integer> exchannges=new TreeMap<>();// map from exchange to frequency.
     static final TreeMap<Integer,String> sortedExchanges=new TreeMap<>();
     // the frequencies above may not be unique.
@@ -109,7 +110,7 @@ class Stock {
         int n=rows.get(0).length;
         for(String[] words:rows) {
             Stock stock=new Stock(words);
-            stocks.put(words[0],stock); // maybe  keep this sorted?
+            stocks.put(words[0],stock); // using ticker here
         }
         Iterator<String> keys=stocks.keySet().iterator();
         int samples=0;

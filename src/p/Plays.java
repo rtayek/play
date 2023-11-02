@@ -13,9 +13,13 @@ import com.tayek.util.Histogram;
 public class Plays {
     class Play {
         public enum Result { win, tie, lose }
-        public Play(String filename) {
-            this.filename=filename;
-            //this.prices=prices;
+        public Play(String fileename) { // this is a filename i.e. AAPL.csv
+            // and not AAPL which was why we could not find
+            this.filename=fileename;
+            ticker=removeTarget(filename,".csv");
+            Stock stock=stocks.get(ticker);
+            if(stock!=null) exchange=stock.exchange;
+            else throw new RuntimeException("stock is null!");
         }
         public static double profit(double boughtAt,double current) {
             double profit=(current-boughtAt)/boughtAt;
@@ -72,30 +76,38 @@ public class Plays {
             }
             return boughtAt;
         }
+        // we need to add a date to the data frame.
+        // maybe include the date in the filename.
+        // also maybe add the buy strategy to the data frame. 
+        // also, add the change in value over the prices to the data frame.
         @Override public String toString() {
-            return "Play [name()="+name()+", bankroll()="+bankroll()+", eProfit()="+eProfit()+", sdProfit()="+sdProfit()
-                    +", pptd()="+pptd()+", winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()
-                    +", hProfit()="+hProfit()+"]";
+            return "Play [exchange()="+exchange()+", name()="+ticker()+", bankroll()="+bankroll()+", eProfit()="
+                    +eProfit()+", sdProfit()="+sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()+", buyRate()="
+                    +buyRate()+", days()="+days()+", hProfit()="+hProfit()+"]";
         }
-        public String toString2() {
+        public String toString2() { // this is the summary
             String s=String.format(
-                    "symbol: %s, bankroll: %7.3f, eProfit: %5.2f, sdProfit: %5.2f, pptd: %7.3f, winRate: %5.2f, buyRate: %7.3f, days: %4d",
-                    name(),bankroll(),eProfit(),sdProfit(), //
+                    "exchange(): %3s, ticker: %10s, bankroll: %7.3f, eProfit: %5.2f, sdProfit: %5.2f, pptd: %7.3f, winRate: %5.2f, buyRate: %7.3f, days: %4d",
+                    exchange(),ticker(),bankroll(),eProfit(),sdProfit(), //
                     pptd(),winRate(),buyRate(),days());
             return s;
-        }
+        }       
         public String toCSVLine() {
-            String s=String.format("%20s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
-                    name(),bankroll(),eProfit(),sdProfit(), //
+            if(true) { return result.toString(arguments()); }
+            String s=String.format("%3s, %10s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
+                    exchange(),ticker(),bankroll(),eProfit(),sdProfit(), //
                     pptd(),winRate(),buyRate(),days());
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
         }
         public static String header() {
+            // 
             return "exchange, name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
         // name should be ticker symbol.
-        public String name() { return filename; }
+        public String exchange() { return exchange; }
+        public String filename() { return filename; }
+        public String ticker() { return ticker; }
         public Double bankroll() { return bankroll; }
         public Double eProfit() { return hProfit().mean(); }
         public Double sdProfit() { return Math.sqrt(hProfit().variance()); }
@@ -110,56 +122,49 @@ public class Plays {
             if(n!=buys) throw new RuntimeException("oops");
             return n/(double)prices.length;
         }
-        public int days() { return prices.length; }
+        public int days() { return prices.length; } // assumes we will always use them all!
         public Histogram hProfit() { return hProfit; }
-        void oneStock(BiPredicate<Integer,Double[]> strategy) {
+        void oneStock(Strategy strategy) {
             double boughtAt=0;
             if(verbosity>0) System.out.println("-----------------------");
             if(verbosity>0) System.out.println(prices.length+" prices.");
             for(int i=buffer;i<prices.length-forecast;++i) {
                 if(verbosity>0) System.out.println("index: "+i+", bankroll: "+bankroll);
                 if(bankroll<0) { System.out.println("broke!"); break; }
-                boughtAt=oneDay(strategy,i,boughtAt);
+                boughtAt=oneDay(strategy.buy,i,boughtAt);
                 if(verbosity>0) System.out.println("-----------------------");
                 if(false&&i>=buffer+1) { System.out.println("breaking out after "+i); break; }
             }
             if(hProfit.n()==0) {
-                System.out.println("no activity for stock: "+filename);
-                //throw new RuntimeException("no activity for stock: "+filename);
+                System.out.println("no activity for stock: "+ticker);
+                //throw new RuntimeException("no activity for stock: "+name);
             }
-        }
-        void summary() {
-            //System.out.println("summary:"); 
-            System.out.println(this.toString2());
         }
         //public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
         // }
+        Object[] arguments() {
+            Object[] arguments=new Object[] {exchange(),
+                    // need  buy, date,
+                    ticker(), // should be ticker
+                    // no, we now have ticker and filename
+                    // maybe just use ticker and add filename
+                    bankroll(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
+            return arguments;
+        }
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()? - just the Play[]?
             StringWriter w=new StringWriter();
             w.write(Play.header()+'\n');
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
-                String name=play.filename;
+                String filename=play.filename;
                 if(play.hProfit.n()>0) {
-                    String[] words=name.split(" ");
-                    name=words[0]; // first word of filename?
-                    String target=".csv";
-                    if(name.endsWith(target)) {
-                        //System.out.println("before: "+name);
-                        name=name.substring(0,name.length()-target.length());
-                        //System.out.println("after: "+name);
-                    }
-                    Stock stock=stocks.get(name);
-                    //System.out.println(stock);
-                    if(true) { String s=String.format("%-10s",stock.exchange); w.write(s); w.write(", "); }
-                    // get rid of the 10s above
                     w.write(play.toCSVLine());
                     w.write('\n');
                 } else {
-                    System.out.println("omitting: "+name); // never prints!
+                    System.out.println("omitting: "+play.filename); // never prints!
                     // because empties are not put into plays.map
-                    throw new RuntimeException("omitting: "+name);
+                    throw new RuntimeException("omitting: "+play.filename);
                 }
             }
             //w.write(Play.header()+'\n');
@@ -192,7 +197,12 @@ public class Plays {
             double d=bankroll();
             double factor=dt/100_000_000.;
             //System.out.println("dt2: "+dt+", factor: "+factor);
-            double key=-(bankroll()+factor);
+            double key=-(bankroll()+factor); // this breaks sort order!
+            Random r=new Random();
+            double x=r.nextGaussian(0,1e-7);
+            key=-bankroll()+x;
+            if(map.containsKey(key))
+                throw new RuntimeException("dup;licate key!");
             map.put(key,this);
         }
         public void prologue() {
@@ -206,6 +216,8 @@ public class Plays {
             //static double initialBankroll=1;
         }
         public final long t0=System.nanoTime();
+        public String exchange;
+        public final String ticker;
         public /*final*/ String filename; // so we can change it for different strategies.
         public transient int buys,wins,losses,ties;
         public transient double bankroll=initialBankroll;
@@ -262,7 +274,7 @@ public class Plays {
         fw.write(w.toString());
         fw.close();
     }
-    public Play one(String filename,Double[] prices,BiPredicate<Integer,Double[]> strategy) {
+    public Play one(String filename,Double[] prices,Strategy strategy) {
         // make this use complete path
         // filename is not really the filename
         Play play=new Play(filename);
@@ -270,7 +282,8 @@ public class Plays {
         play.rake=.0;
         //play.verbosity=1;
         play.oneStock(strategy);
-        if(play.verbosity>0) play.summary();
+        if(play.verbosity>0) //System.out.println("summary:"); 
+            System.out.println(play.toString2());
         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
         if(play.verbosity>0) System.out.println(play);
         if(play.verbosity>0)
@@ -279,7 +292,7 @@ public class Plays {
         if(play.verbosity>0) System.out.println(play.toString2());
         return play;
     }
-    public void some(Path path,List<String> filenames,MyDate from,MyDate to,BiPredicate<Integer,Double[]> strategy) {
+    public void some(Path path,List<String> filenames,MyDate from,MyDate to,Strategy strategy) {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
         //for(int i=0;i<5;++i) System.out.println(filenames.get(i));
@@ -288,7 +301,8 @@ public class Plays {
             String filename=filenames.get(index);
             Double[] prices=null;
             List<String[]> rows=getCSV(path,filename);
-            System.out.println("file: "+filename+" has data from: "+rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
+            System.out.println("map size;  "+map.size()+", index: "+index+", file: "+filename+" has data from: "
+                    +rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
             prices=getClosingPrices(rows);
             if(prices.length<minSize) { ++skippedFiles; continue; }
             int length=260; // same as min size for now. about one year
@@ -303,9 +317,16 @@ public class Plays {
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
-            //System.out.println("play: "+play.toString2());
+            System.out.println("<<<<<");
+            System.out.println(result.header());
+            System.out.println("to csv:  "+play.toCSVLine());
+            System.out.println("toString2: "+play.toString2());
+            System.out.println("toString; "+play.toString());
+            System.out.println("csv result; "+result.toString(play.arguments()));
+            System.out.println(">>>>>");
             if(play.hProfit.n()>0) {
-                if(play.verbosity>0) play.summary();
+                if(play.verbosity>0) //System.out.println("summary:"); 
+                    System.out.println(play.toString2());
                 if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
                 //System.out.println("dt: "+(System.nanoTime()-play.t0));
                 // updates will co-mingle different buys.
@@ -324,7 +345,7 @@ public class Plays {
         files=Arrays.asList(dir.list());
         return files;
     }
-    void run(BiPredicate<Integer,Double[]> strategy) {
+    void run(Strategy strategy) {
         // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
         // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
         // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
@@ -342,6 +363,8 @@ public class Plays {
         some(path,files,from,to,strategy);
         System.out.println(">>>>>>>>>>>>>>>>>>");
         System.out.println("map sze: "+map.size());
+        System.out.println("map: "+map);
+        System.out.println("key set: "+map.keySet());
         System.out.println("end of processing filenames.");
         System.out.println(skippedFiles+" skipped files.");
         if(false) try {
@@ -372,16 +395,16 @@ public class Plays {
         Stock.sortExchangesByFrequency();
         //Stock.printSortedExchanges();
         //if(true) return;
-        ArrayList<BiPredicate<Integer,Double[]>> buys=buys();
-        int n=buys.size();
+        ArrayList<Strategy> strategies=strategies();
+        int n=strategies.size();
         Plays[] plays=new Plays[n];
         for(int i=0;i<n;++i) plays[i]=new Plays();
         // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
-            //plays[i].maxFiles=100;
-            plays[i].run(buys.get(i));
+            plays[i].maxFiles=10;
+            plays[i].run(strategies.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");
         }

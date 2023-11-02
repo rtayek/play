@@ -9,7 +9,35 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import com.opencsv.exceptions.CsvException;
+import com.tayek.util.Pair;
 public class CSV { // utilities
+    public String header() {
+        StringBuffer stringBuffer=new StringBuffer();
+        boolean once=false;
+        for(Pair pair:pairs) {
+            if(!once) once=true;
+            else stringBuffer.append(", ");
+            stringBuffer.append(pair.first);
+        }
+        return stringBuffer.toString();
+        
+    }
+    public String[] names() {
+        return names;
+    }
+    @Override public String toString() { // can never work!
+        // needs data for the format strings
+        StringBuffer stringBuffer=new StringBuffer();
+        boolean once=false;
+        for(Pair pair:pairs) {
+            if(!once) once=true;
+            else stringBuffer.append(", ");
+            System.out.println("pair: "+pair);
+            String s=String.format((String)pair.second,(String)pair.first);
+            stringBuffer.append(s);
+        }
+        return stringBuffer.toString();
+    }
     public static void removeExtraQuotes(List<String[]> rows) {
         int index=0;
         for(String[] row:rows) { stripQuotes(index,row); }
@@ -60,6 +88,7 @@ public class CSV { // utilities
         return prices;
     }
     public static String toLine(String[] names,Object[] objects) {
+        // can this use toString somehow?
         StringBuffer s=new StringBuffer();
         for(int i=0;i<names.length;++i) {
             if(i>0) s.append(", ");
@@ -68,6 +97,7 @@ public class CSV { // utilities
         return s.toString();
     }
     public static String toLine(Object... arguments) {
+        // can this use toString somehow?
         StringBuffer s=new StringBuffer();
         for(int i=0;i<arguments.length;i+=2) {
             if(i>0) s.append(", ");
@@ -75,7 +105,71 @@ public class CSV { // utilities
         }
         return s.toString();
     }
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
+    public static String removeTarget(String name,String target) {
+        if(name.endsWith(target)) {
+            //System.out.println("before: "+name);
+            name=name.substring(0,name.length()-target.length());
+            //System.out.println("after: "+name);
+        }
+        return name;
     }
+    public String toString(Object... arguments) {
+        // can this use toString somehow?
+        StringBuffer stringBuffer=new StringBuffer();
+        for(int i=0;i<Math.min(arguments.length,pairs.size()) ;++i) {
+            if(i>0) stringBuffer.append(", ");
+            String s=String.format((String)pairs.get(i).second,arguments[i]);
+            stringBuffer.append(s);
+        }
+        return stringBuffer.toString();
+    }
+    public static void main(String[] args) {
+        Plays plays=new Plays();
+        Plays.Play play=plays.new Play("AAPL.csv");
+        play.prices=new Double[] {1.,2.,3.};
+        System.out.println(play);
+        System.out.println("header: "+result.header());
+        Object[] arguments=new Object[] {
+                play.exchange(),
+                // need  buy, date,
+                play.ticker(), // should be ticker
+                // no, we now have ticker and filename
+                // maybe just use ticker and add filename
+                play.bankroll(),
+                play.eProfit(),
+                play.sdProfit(),
+                play.pptd(),
+                play.winRate(),
+                play.buyRate(),
+                play.days(),
+        };
+        System.out.println("result: "+result.toString(arguments));
+        
+        //System.out.println(result);
+    }
+    ArrayList<Pair> pairs=new ArrayList<>();
+    String[] names=new String[pairs.size()];
+    String[] formats=new String[pairs.size()];
+    /*
+        , winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()
+                +", hProfit()="+hProfit()+"]";
+        eProfit: %5.2f, sdProfit: %5.2f, pptd: %7.3f, winRate: %5.2f, buyRate: %7.3f, days: %4d",
+        String s=String.format("%15s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
+        if(false) s+=String.format(", \"%s\"",hProfit());
+        return "exchange, ,hProfit";
+    */
+    static final CSV result=new CSV() {
+        // this really needs a Play to print
+        {
+            pairs.add(new Pair("exchange","%3s"));
+            pairs.add(new Pair("ticker","%10s"));
+            pairs.add(new Pair("bankroll","%7.3f"));
+            pairs.add(new Pair("eProfit","%6.3f"));
+            pairs.add(new Pair("sdProfit","%6.3f"));
+            pairs.add(new Pair("pptd","%6.3f"));
+            pairs.add(new Pair("winRate","%5.2f"));
+            pairs.add(new Pair("buyRate","%5.3f"));
+            pairs.add(new Pair("days","%d"));
+        }
+    };
 }

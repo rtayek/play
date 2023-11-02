@@ -18,8 +18,9 @@ public class Time {
             Double[] prices=getClosingPrices(timePeriod);
             if(prices.length>0) {
             Plays plays=new Plays();
-            Play play=plays.one(ticker,prices,buy3);
-            play.summary();
+            Play play=plays.one(ticker,prices,strategy3);
+            //System.out.println("summary:"); 
+            System.out.println(play.toString2());
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
     }

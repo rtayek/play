@@ -15,7 +15,7 @@ public class Apple {
         //System.out.println(prices.length+" prices.");
         // using r file, but the quotes have been removed. // maybe not
         Plays plays=new Plays();
-        Play play=plays.one("apple from R",prices,buy2);
+        Play play=plays.one("apple from R",prices,strategy2);
         return play;
     }
     public static void main(String[] args) { Play play=apple(); System.out.println(play); }

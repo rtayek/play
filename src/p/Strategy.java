@@ -1,7 +1,12 @@
 package p;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.function.BiPredicate;
 public class Strategy {
+    Strategy(String name,BiPredicate<Integer,Double[]> buy) {
+        this.name=name;
+        this.buy=buy;
+    }
     static public ArrayList<BiPredicate<Integer,Double[]>> buys() {
         ArrayList<BiPredicate<Integer,Double[]>> buys=new ArrayList<>();
         //buys.add(buy0);
@@ -11,6 +16,16 @@ public class Strategy {
         buys.add(buy3b);
         //buys.add(buy4);
         return buys;
+    }
+    static public ArrayList<Strategy> strategies() {
+        ArrayList<Strategy> strategies=new ArrayList<>();
+        //buys.add(buy0);
+        //buys.add(buy1);
+        strategies.add(strategy2);
+        strategies.add(strategy3);
+        strategies.add(strategy3b);
+        //buys.add(buy4);
+        return strategies;
     }
     public static void main(String[] args) {
         // these need a name. index does not work well.
@@ -61,4 +76,24 @@ public class Strategy {
         double p5=prices[index-3];
         return p1<p2&&p2<p3&&p3<p4&&p4<p5;
     };
+    public static final Strategy strategy0=new Strategy("buy0",buy0); 
+    public static final Strategy strategy1=new Strategy("buy1",buy1); 
+    public static final Strategy strategy2=new Strategy("buy2",buy2); 
+    public static final Strategy strategy3=new Strategy("buy3",buy3); 
+    public static final Strategy strategy3b=new Strategy("buy3b",buy3b); 
+    public static final Strategy strategy4=new Strategy("buy4",buy4);
+    public static final LinkedHashMap<String,Strategy> map=new LinkedHashMap<>();
+    static  {
+        map.put(strategy0.name,strategy0);
+        map.put(strategy1.name,strategy1);
+        map.put(strategy2.name,strategy2);
+        map.put(strategy3.name,strategy3);
+        map.put(strategy3b.name,strategy3b);
+        map.put(strategy0.name,strategy0);
+    }
+    
+
+    final String name;
+    final BiPredicate<Integer,Double[]> buy;
+    
 }

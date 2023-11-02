@@ -21,7 +21,7 @@ class PlayTestCase {
         //play.verbosity=2;
         play.rake=.01;
         if(play.verbosity>0) System.out.println(play);
-        play.oneStock(buy0);
+        play.oneStock(strategy0);
         double expectedBankroll=1.37214;
         assertEquals(expectedBankroll,play.bankroll,epsilon);
         if(play.verbosity>0) System.out.println(play);
@@ -78,7 +78,7 @@ class PlayTestCase {
     }
     Plays plays=new Plays();
     Play play;
-    BiPredicate<Integer,Double[]> buy=buy2;
+    Strategy buy=strategy2;
     // note: p1-p5 are not related to the buying strategies.
     static final Double[] p1=new Double[] {1.,2.,3.,0.,0.,0.,0.};
     static final Double[] p2=new Double[] {1.,2.,3.,3.,0.,0.,0.};

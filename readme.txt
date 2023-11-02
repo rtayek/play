@@ -73,7 +73,20 @@ what to do next. use the few hundred that are in buy3b?
 got r code to make new price files. the are in DataPaths: Path newPrices=Path.of("e:\\data");
 we only have 1538 new prices, but r is making the rest. so we can use these now.
 
-+we need to add a date to the data frame. maybe include the data in the filename
+we need to add a date to the data frame.
+maybe include the date in the filename.
+also maybe add the buy strategy to the data frame. 
+also, add the change in value over the prices to the data frame.
+
+consolidate these:
+	System.out.println("to csv:  "+play.toCSVLine());
+	System.out.println("toString2: "+play.toString2());
+	System.out.println("toString; "+play.toString());
+	System.out.println("csv result; "+result.toString(play.arguments()));
+
+added ticker to Play, so we now have ticker and filename. added  toString to csv class. got oCSVLine()) and result to be identical. fixed bug in sort logic
+
+
 
  
 
