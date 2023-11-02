@@ -93,15 +93,11 @@ public class Plays {
             return s;
         }       
         public String toCSVLine() {
-            if(true) { return result.toString(arguments()); }
-            String s=String.format("%3s, %10s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
-                    exchange(),ticker(),bankroll(),eProfit(),sdProfit(), //
-                    pptd(),winRate(),buyRate(),days());
+            String s=result.toString(arguments());
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
         }
         public static String header() {
-            // 
             return "exchange, name, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
         // name should be ticker symbol.

@@ -11,20 +11,7 @@ import java.util.List;
 import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Pair;
 public class CSV { // utilities
-    public String header() {
-        StringBuffer stringBuffer=new StringBuffer();
-        boolean once=false;
-        for(Pair pair:pairs) {
-            if(!once) once=true;
-            else stringBuffer.append(", ");
-            stringBuffer.append(pair.first);
-        }
-        return stringBuffer.toString();
-        
-    }
-    public String[] names() {
-        return names;
-    }
+    public String[] names() { return names; }
     @Override public String toString() { // can never work!
         // needs data for the format strings
         StringBuffer stringBuffer=new StringBuffer();
@@ -113,10 +100,18 @@ public class CSV { // utilities
         }
         return name;
     }
-    public String toString(Object... arguments) {
-        // can this use toString somehow?
+    public String header() {
         StringBuffer stringBuffer=new StringBuffer();
-        for(int i=0;i<Math.min(arguments.length,pairs.size()) ;++i) {
+        for(int i=0;i<pairs.size();++i) {
+            if(i>0) stringBuffer.append(", ");
+            String s=((String)pairs.get(i).first);
+            stringBuffer.append(s);
+        }
+        return stringBuffer.toString();
+    }
+    public String toString(Object... arguments) {
+        StringBuffer stringBuffer=new StringBuffer();
+        for(int i=0;i<Math.min(arguments.length,pairs.size());++i) {
             if(i>0) stringBuffer.append(", ");
             String s=String.format((String)pairs.get(i).second,arguments[i]);
             stringBuffer.append(s);
@@ -129,22 +124,13 @@ public class CSV { // utilities
         play.prices=new Double[] {1.,2.,3.};
         System.out.println(play);
         System.out.println("header: "+result.header());
-        Object[] arguments=new Object[] {
-                play.exchange(),
+        Object[] arguments=new Object[] {play.exchange(),
                 // need  buy, date,
                 play.ticker(), // should be ticker
                 // no, we now have ticker and filename
                 // maybe just use ticker and add filename
-                play.bankroll(),
-                play.eProfit(),
-                play.sdProfit(),
-                play.pptd(),
-                play.winRate(),
-                play.buyRate(),
-                play.days(),
-        };
+                play.bankroll(),play.eProfit(),play.sdProfit(),play.pptd(),play.winRate(),play.buyRate(),play.days(),};
         System.out.println("result: "+result.toString(arguments));
-        
         //System.out.println(result);
     }
     ArrayList<Pair> pairs=new ArrayList<>();

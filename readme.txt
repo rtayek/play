@@ -84,7 +84,10 @@ consolidate these:
 	System.out.println("toString; "+play.toString());
 	System.out.println("csv result; "+result.toString(play.arguments()));
 
-added ticker to Play, so we now have ticker and filename. added  toString to csv class. got oCSVLine()) and result to be identical. fixed bug in sort logic
+added ticker to Play, so we now have ticker and filename. 
+added  toString to csv class.
+got oCSVLine()) and result to be (almost) identical.
+fixed bug in sort logic. added random with very small variance instead of elapsed time.
 
 
 
