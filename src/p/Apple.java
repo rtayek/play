@@ -13,7 +13,19 @@ public class Apple {
         //System.out.println(prices.length+" prices.");
         // using r file, but the quotes have been removed. // maybe not
         Plays plays=new Plays();
-        Play play=plays.one("apple from R",prices,strategy2);
+        // make this use complete path
+        // filename is not really the filename
+        Play play=plays.new Play("apple from R");
+        play.prices=prices;
+        play.rake=.0;
+        //play.verbosity=1;
+        // need to add date!
+        play.oneStock(strategy2);
+        if(play.verbosity>0) System.out.println(play);
+        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
+        if(play.verbosity>0)
+            System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
+        if(play.verbosity>0) System.out.println(play.toCSVLine());
         return play;
     }
     public static void main(String[] args) { 

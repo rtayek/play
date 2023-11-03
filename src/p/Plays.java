@@ -70,7 +70,8 @@ public class Plays {
             if(prices==null) throw new RuntimeException("prices is null!");
             double old=prices[0];
             double change=(prices[prices.length-1]-old)/old;
-            return change;
+            //return change;
+            return prices[prices.length-1]/old;
         }
         double oneDay(BiPredicate<Integer,Double[]> strategy,int i,double boughtAt) { // one day
             if(boughtAt==0) { // new buy?
@@ -287,21 +288,6 @@ public class Plays {
         fw.write(w.toString());
         fw.close();
     }
-    public Play one(String filename,Double[] prices,Strategy strategy) {
-        // make this use complete path
-        // filename is not really the filename
-        Play play=new Play(filename);
-        play.prices=prices;
-        play.rake=.0;
-        //play.verbosity=1;
-        play.oneStock(strategy);
-        if(play.verbosity>0) System.out.println(play);
-        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
-        if(play.verbosity>0)
-            System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
-        if(play.verbosity>0) System.out.println(play.toCSVLine());
-        return play;
-    }
     public void some(Path path,List<String> filenames,MyDate from,MyDate to,Strategy strategy) {
         System.out.println("from: "+from);
         System.out.println("to: "+to);
@@ -319,12 +305,16 @@ public class Plays {
             if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
             int start=prices.length-length;
             int stop=prices.length;
+            // try to get the date
+            String[] row=rows.get(start);
+            MyDate myDate=new MyDate(row[0]);
             prices=filter(start,stop,prices);
             if(prices.length==0) { System.out.println("no prices!"); continue; }
             //System.out.println(prices.length+" prices.");
             Play play=new Play(filename);
             play.prices=prices;
             play.strategyName=strategy.name; // this is just the name for csv.
+            play.date=myDate;
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
@@ -398,13 +388,17 @@ public class Plays {
         //if(true) return;
         ArrayList<Strategy> strategies=strategies();
         int n=strategies.size();
+        // one(prices,strategies)
+        // one(file,timePeriods,strategies)
+        // some/run(files,timePeriods,strategies)
+
         Plays[] plays=new Plays[n];
         for(int i=0;i<n;++i) plays[i]=new Plays();
         // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
-            //plays[i].maxFiles=10;
+            plays[i].maxFiles=5;
             plays[i].run(strategies.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         }

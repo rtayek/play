@@ -18,7 +18,19 @@ public class Time {
             Double[] prices=getClosingPrices(timePeriod);
             if(prices.length>0) {
             Plays plays=new Plays();
-            Play play=plays.one(ticker,prices,strategy3);
+            // make this use complete path
+            // filename is not really the filename
+            Play play=plays.new Play(ticker);
+            play.prices=prices;
+            play.rake=.0;
+            //play.verbosity=1;
+            // need to add date!
+            play.oneStock(strategy3);
+            if(play.verbosity>0) System.out.println(play);
+            if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
+            if(play.verbosity>0)
+                System.out.println("wins: "+play.wins+", buys: "+play.buys+", total rake: "+play.totalRake);
+            if(play.verbosity>0) System.out.println(play.toCSVLine());
             //System.out.println("summary:"); 
             System.out.println(play.toCSVLine());
             } else System.out.println("no prices for: from: "+from+" to: "+to);

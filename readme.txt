@@ -89,7 +89,24 @@ added  toString to csv class.
 got oCSVLine()) and result to be (almost) identical.
 fixed bug in sort logic. added random with very small variance instead of elapsed time.
 
-added change, date, and buy
+added change, date, and buy.
+
+add number of buys to csv.
+changed change() to be new/old as opposed to (new-old)/old.
+
+curreny loop is:
+	foreach strategy
+		foreach file
+			do one time period.
+			
+change to
+	foreach file
+		foreach time period
+			foreach strategy
+				do one time period.
+
+
+
 
 
 
