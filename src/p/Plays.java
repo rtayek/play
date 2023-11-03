@@ -150,19 +150,14 @@ public class Plays {
             if(verbosity>0) System.out.println("-----------------------");
             if(verbosity>0) System.out.println(prices.length+" prices.");
             for(int i=buffer;i<prices.length-forecast;++i) {
-                if(verbosity>0) System.out.println("index: "+i+", bankroll: "+bankroll);
                 if(bankroll<0) { System.out.println("broke!"); break; }
                 boughtAt=oneDay(strategy.buy,i,boughtAt);
-                if(verbosity>0) System.out.println("-----------------------");
-                if(false&&i>=buffer+1) { System.out.println("breaking out after "+i); break; }
             }
             if(hProfit.n()==0) {
                 System.out.println("no activity for stock: "+ticker);
                 //throw new RuntimeException("no activity for stock: "+name);
             }
         }
-        //public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
-        // }
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()? - just the Play[]?
             StringWriter w=new StringWriter();
@@ -305,17 +300,14 @@ public class Plays {
             if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
             int start=prices.length-length;
             int stop=prices.length;
-            // try to get the date
             String[] row=rows.get(start);
             MyDate myDate=new MyDate(row[0]);
             prices=filter(start,stop,prices);
             if(prices.length==0) { System.out.println("no prices!"); continue; }
-            //System.out.println(prices.length+" prices.");
             Play play=new Play(filename);
             play.prices=prices;
             play.strategyName=strategy.name; // this is just the name for csv.
             play.date=myDate;
-            //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
             if(play.hProfit.n()>0) {
