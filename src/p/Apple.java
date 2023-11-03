@@ -8,9 +8,7 @@ import static p.CSV.*;
 import p.Plays.Play;
 public class Apple {
     public static Play apple() {
-        //Double[] prices=getPricesFromR(rPath,"apple.csv",from,to);
         List<String[]> rows=getCSV(rPath,"apple.csv");
-        //for(String[] row:rows) System.out.println(Arrays.asList(row));
         Double[] prices=getClosingPrices(rows);
         //System.out.println(prices.length+" prices.");
         // using r file, but the quotes have been removed. // maybe not
@@ -18,5 +16,8 @@ public class Apple {
         Play play=plays.one("apple from R",prices,strategy2);
         return play;
     }
-    public static void main(String[] args) { Play play=apple(); System.out.println(play); }
+    public static void main(String[] args) { 
+        Play play=apple(); 
+        System.out.println(play);
+        }
 }

@@ -69,7 +69,7 @@ class OpenCSVTestCase {
         String[] headers=rows.remove(0);
         for(String[] words:rows) {
             String expected=words[0];
-            String actual=new MyDate(expected).toString2();
+            String actual=new MyDate(expected).toString();
             assertEquals(expected,actual);
         }
     }

@@ -1,7 +1,7 @@
 package p;
 import static p.Stock.*;
 import static p.CSV.*;
-import static p.Plays.Play.Result.*;
+import static p.Plays.Play.What.*;
 import static p.DataPaths.*;
 import static p.Strategy.*;
 import java.io.*;
@@ -10,20 +10,28 @@ import java.util.*;
 import java.util.function.*;
 import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Histogram;
+import com.tayek.util.Pair;
 public class Plays {
     class Play {
-        public enum Result { win, tie, lose }
-        public Play(String filename) { // this is a filename i.e. AAPL.csv
+        public enum What { win, tie, lose }
+        public static String getExchange(String filename) { // hack
+            String ticker=removeTarget(filename,".csv");
+            Stock stock=stocks.get(ticker);
+            String exchange=stock!=null?stock.exchange:"";
+            return exchange;
+        }
+        public Play(String filename) { this(filename,getExchange(filename)); }
+        public Play(String filename,String exchange) {
+            this.exchange=exchange;
+            ticker=removeTarget(filename,".csv");
+            // this is a filename i.e. AAPL.csv
             // and not AAPL which was why we could not find
             this.filename=filename;
             // this variable is not used as a filename!
             // we mung it later so  we can tell what buy was used.
             // we will add buy and date to the summary line.
             // so  add these and stop munging the filename.
-            ticker=removeTarget(filename,".csv");
-            Stock stock=stocks.get(ticker);
-            if(stock!=null) exchange=stock.exchange;
-            else throw new RuntimeException("stock is null!");
+            date=new MyDate(); // just so there is something there.
         }
         public static double profit(double boughtAt,double current) {
             double profit=(current-boughtAt)/boughtAt;
@@ -32,8 +40,8 @@ public class Plays {
         public void sell(double boughtAt,int index,double amountBet) { // add bought price, then recurse
             double current=prices[index];
             double change=current-boughtAt;
-            Play.Result result=change>0?win:change==0?tie:lose;
-            switch(result) {
+            Play.What whatHappened=change>0?win:change==0?tie:lose;
+            switch(whatHappened) {
                 case win:
                     ++wins;
                     break;
@@ -57,6 +65,12 @@ public class Plays {
                         profit,bankroll,boughtAt,current,current-boughtAt,rake);
             if(verbosity>1) System.out
                     .println(index+", buys: "+buys+", wins: "+wins+", ties "+ties+", losses "+losses+", br: "+bankroll);
+        }
+        double change() {
+            if(prices==null) throw new RuntimeException("prices is null!");
+            double old=prices[0];
+            double change=(prices[prices.length-1]-old)/old;
+            return change;
         }
         double oneDay(BiPredicate<Integer,Double[]> strategy,int i,double boughtAt) { // one day
             if(boughtAt==0) { // new buy?
@@ -85,17 +99,19 @@ public class Plays {
         // also maybe add the buy strategy to the data frame. 
         // also, add the change in value over the prices to the data frame.
         @Override public String toString() {
-            return "Play [exchange()="+exchange()+", name()="+ticker()+", bankroll()="+bankroll()+", eProfit()="
-                    +eProfit()+", sdProfit()="+sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()+", buyRate()="
-                    +buyRate()+", days()="+days()+", hProfit()="+hProfit()+"]";
+            return "Play [exchange()="+exchange()+", ticker()="+ticker()+", change()="+change()+", bankroll()="+bankroll()
+                    +", buy="+strategyName()
+                    +", eProfit()="+eProfit()+", sdProfit()="+sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()
+                    +", buyRate()="+buyRate()+", days()="+days()+", hProfit()="+hProfit()+"]";
         }
-        Object[] arguments() {
-            Object[] arguments=new Object[] {exchange(),
-                    ticker(),
+        Object[] arguments() { // maybe belongs in Plays?
+            Object[] arguments=new Object[] {exchange(),ticker(),
+                    date(),
+                    change(),
                     // need  buy, date,
                     // no, we now have ticker and filename
                     // maybe just use ticker and add filename
-                    bankroll(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
+                    bankroll(),strategyName(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
             return arguments;
         }
         public String toCSVLine() {
@@ -103,10 +119,12 @@ public class Plays {
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
         }
-        public static String header() {
+        public static String xheader() {
             return "exchange, ticker, bankroll, eProfit, sdProfit, pptd, winRate, buyRate, days, hProfit";
         }
         // name should be ticker symbol.
+        public String date() { return date.toString(); }
+        public String strategyName() { return strategyName; }
         public String exchange() { return exchange; }
         public String filename() { return filename; }
         public String ticker() { return ticker; }
@@ -147,10 +165,11 @@ public class Plays {
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()? - just the Play[]?
             StringWriter w=new StringWriter();
-            w.write(Play.header()+'\n');
+            w.write(result.header()+'\n');
             for(Object d:map.keySet()) {
                 Play play=map.get(d);
                 if(play.hProfit.n()>0) {
+                    // System.out.println(play); // seems to work ok
                     w.write(play.toCSVLine());
                     w.write('\n');
                 } else {
@@ -164,11 +183,11 @@ public class Plays {
             return w;
         }
         public static void toConsole(SortedMap<Comparable<?>,Play> map) {
-            System.out.println(Play.header());
+            System.out.println(result.header());
             for(Object d:map.keySet()) System.out.println(map.get(d));
         }
         public static void toCsv(SortedMap<Comparable<?>,Play> map) {
-            System.out.println(Play.header());
+            System.out.println(result.header());
             for(Object d:map.keySet()) System.out.println(map.get(d).toCSVLine());
         }
         public static List<String> getFilenames(String filename) throws IOException {
@@ -207,7 +226,9 @@ public class Plays {
             //static double initialBankroll=1;
         }
         public final long t0=System.nanoTime();
-        public String exchange;
+        public MyDate date;
+        public String exchange; // maybe can not be final
+        public String strategyName;
         public final String ticker;
         public /*final*/ String filename; // so we can change it for different strategies.
         public transient int buys,wins,losses,ties;
@@ -227,7 +248,7 @@ public class Plays {
         for(int i=start;i<stop;++i) p[i-start]=prices[i];
         return p;
     }
-    static void toCsv(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
+    static void toCsvFile(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         if(filename!=null) {
             System.out.println("writing: "+map.size()+" entries to: "+filename);
             StringWriter w=Play.toCSV(map); // maybe pass values in?
@@ -247,7 +268,7 @@ public class Plays {
         System.out.println("buy rate: "+hBuyRate);
         //Play.toConsole(Play.map);
         try {
-            toCsv(map,filename);
+            toCsvFile(map,filename);
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -303,6 +324,7 @@ public class Plays {
             //System.out.println(prices.length+" prices.");
             Play play=new Play(filename);
             play.prices=prices;
+            play.strategyName=strategy.name; // this is just the name for csv.
             //play.verbosity=1;
             if(index==0) play.prologue(); // before
             play.oneStock(strategy); // buy fails with array out of bounds
@@ -382,15 +404,14 @@ public class Plays {
         for(int i=0;i<n;++i) {
             System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
             plays[i].maxFiles=staticMaxFiles;
-            plays[i].maxFiles=10;
+            //plays[i].maxFiles=10;
             plays[i].run(strategies.get(i));
             System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            System.out.println("elasped time: "+(System.currentTimeMillis()-plays[i].t0ms)+" ms.");
         }
         boolean writeBuys=true;
         if(writeBuys) for(int i=0;i<n;++i) {
             Plays plays_=plays[i];
-            toCsv(plays_.map,"buy"+i+".csv");
+            toCsvFile(plays_.map,"buy"+i+".csv");
         }
         boolean writeTickes=true;
         if(writeTickes) for(int i=0;i<n;++i) {
@@ -399,18 +420,18 @@ public class Plays {
         }
         for(int i=0;i<n;++i) { // mung the filenames
             for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
-        // this adds the buy index to the filename
+            // this adds the buy index to the filename
         }
         // combine the different strategies.
-        SortedMap<Comparable<?>,Play> map=new TreeMap<>();
-        for(int i=0;i<n;++i) map.putAll(plays[i].map); // combine results from different strategies.
-        //Play.toCsv(map);
+        SortedMap<Comparable<?>,Play> combinedMap=new TreeMap<>();
+        for(int i=0;i<n;++i) combinedMap.putAll(plays[i].map); // combine results from different strategies.
+        System.out.println("map:");
+        //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;
-        if(writeBig) toCsv(map,"newbuyall.csv");
+        if(writeBig) Plays.toCsvFile(combinedMap,"newbuyall.csv");
     }
     int verbosity=0; // for the outer class
     // initializers
-    long t0ms=System.currentTimeMillis();
     int startAt=0,minSize=260,maxsize=260;
     int maxFiles=Integer.MAX_VALUE;
     int buffer=5,forecast=3;
@@ -423,4 +444,20 @@ public class Plays {
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
     static int staticMaxFiles=Integer.MAX_VALUE;
+    static final CSV result=new CSV() {
+        {
+            pairs.add(new Pair("exchange","%-3s"));
+            pairs.add(new Pair("ticker","%-10s"));
+            pairs.add(new Pair("date","%-10s"));
+            pairs.add(new Pair("change","%7.2f"));
+            pairs.add(new Pair("bankroll","%7.3f"));
+            pairs.add(new Pair("buy","%-5s"));
+            pairs.add(new Pair("eProfit","%6.3f"));
+            pairs.add(new Pair("sdProfit","%6.3f"));
+            pairs.add(new Pair("pptd","%6.3f"));
+            pairs.add(new Pair("winRate","%5.2f"));
+            pairs.add(new Pair("buyRate","%5.3f"));
+            pairs.add(new Pair("days","%d"));
+        }
+    };
 }

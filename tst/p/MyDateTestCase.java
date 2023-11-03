@@ -1,6 +1,11 @@
 package p;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,19 +20,19 @@ class MyDateTestCase {
     @Test void test1() {
         String expected="1984-09-07";
         MyDate myDate=new MyDate(expected);
-        String actual=myDate.toString2();
+        String actual=myDate.toString();
         assertEquals(expected,actual);
     }
     @Test void test2() {
         String expected="2000-01-01";
         MyDate myDate=new MyDate(expected);
-        String actual=myDate.toString2();
+        String actual=myDate.toString();
         assertEquals(expected,actual);
     }
     @Test void test3() {
         String expected="1970-01-01";
         MyDate myDate=new MyDate(expected);
-        String actual=myDate.toString2();
+        String actual=myDate.toString();
         assertEquals(expected,actual);
     }
     @Test void testComparable() {
@@ -42,5 +47,8 @@ class MyDateTestCase {
         boolean b=inRange(d1,d2,d3);
         assertTrue(b);
     }
-
+    @Test void testNow() {
+        Date today=new Date();
+        MyDate myDate=new MyDate(today);
+    }
 }

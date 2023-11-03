@@ -68,14 +68,6 @@ class PlayTestCase {
         play.oneStock(buy);
         assertEquals(1,play.bankroll);
     }
-    @Test void testEmpty() { String s=toLine(); assertEquals("",s); }
-    @Test void testPartOfOne() { String s=toLine("foo"); assertEquals("foo",s); }
-    @Test void testOne() { String foo="foo"; String s=toLine("foo",foo); assertEquals("foo: foo",s); }
-    @Test void testTwo() {
-        String foo="foo",bar="bar";
-        String s=toLine("foo",foo,"bar",bar);
-        assertEquals("foo: foo, bar: bar",s);
-    }
     Plays plays=new Plays();
     Play play;
     Strategy buy=strategy2;

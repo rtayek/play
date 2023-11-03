@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import com.opencsv.exceptions.CsvException;
@@ -13,6 +14,7 @@ import com.tayek.util.Pair;
 public class CSV { // utilities
     public String[] names() { return names; }
     @Override public String toString() { // can never work!
+        if(true) throw new RuntimeException("ops");
         // needs data for the format strings
         StringBuffer stringBuffer=new StringBuffer();
         boolean once=false;
@@ -83,15 +85,6 @@ public class CSV { // utilities
         }
         return s.toString();
     }
-    public static String toLine(Object... arguments) {
-        // can this use toString somehow?
-        StringBuffer s=new StringBuffer();
-        for(int i=0;i<arguments.length;i+=2) {
-            if(i>0) s.append(", ");
-            if(i+1<arguments.length) s.append(": ").append(arguments[i+1]);
-        }
-        return s.toString();
-    }
     public static String removeTarget(String name,String target) {
         if(name.endsWith(target)) {
             //System.out.println("before: "+name);
@@ -113,6 +106,8 @@ public class CSV { // utilities
         StringBuffer stringBuffer=new StringBuffer();
         for(int i=0;i<Math.min(arguments.length,pairs.size());++i) {
             if(i>0) stringBuffer.append(", ");
+            Pair pair=pairs.get(i);
+            //System.out.println(pair.first+","+pair.second);
             String s=String.format((String)pairs.get(i).second,arguments[i]);
             stringBuffer.append(s);
         }
@@ -123,34 +118,12 @@ public class CSV { // utilities
         Plays.Play play=plays.new Play("AAPL.csv");
         play.prices=new Double[] {1.,2.,3.};
         System.out.println(play);
-        System.out.println("header: "+result.header());
+        System.out.println("header: "+Plays.result.header());
         Object[] arguments=play.arguments();
-        System.out.println("result: "+result.toString(arguments));
-        System.out.println(result);
+        System.out.println(Arrays.asList(arguments));
+        System.out.println("result: "+Plays.result.toString(arguments));
     }
     ArrayList<Pair> pairs=new ArrayList<>();
     String[] names=new String[pairs.size()];
     String[] formats=new String[pairs.size()];
-    /*
-        , winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()
-                +", hProfit()="+hProfit()+"]";
-        eProfit: %5.2f, sdProfit: %5.2f, pptd: %7.3f, winRate: %5.2f, buyRate: %7.3f, days: %4d",
-        String s=String.format("%15s, %7.3f, %5.3f, %5.3f, %7.3f, %5.2f, %7.3f, %4d", //
-        if(false) s+=String.format(", \"%s\"",hProfit());
-        return "exchange, ,hProfit";
-    */
-    static final CSV result=new CSV() {
-        // this really needs a Play to print
-        {
-            pairs.add(new Pair("exchange","%3s"));
-            pairs.add(new Pair("ticker","%10s"));
-            pairs.add(new Pair("bankroll","%7.3f"));
-            pairs.add(new Pair("eProfit","%6.3f"));
-            pairs.add(new Pair("sdProfit","%6.3f"));
-            pairs.add(new Pair("pptd","%6.3f"));
-            pairs.add(new Pair("winRate","%5.2f"));
-            pairs.add(new Pair("buyRate","%5.3f"));
-            pairs.add(new Pair("days","%d"));
-        }
-    };
 }
