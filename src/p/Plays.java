@@ -11,6 +11,7 @@ import java.util.function.*;
 import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Histogram;
 import com.tayek.util.Pair;
+import p.Plays.Play;
 public class Plays {
     class Play {
         public enum What { win, tie, lose }
@@ -100,15 +101,13 @@ public class Plays {
         // also maybe add the buy strategy to the data frame. 
         // also, add the change in value over the prices to the data frame.
         @Override public String toString() {
-            return "Play [exchange()="+exchange()+", ticker()="+ticker()+", change()="+change()+", bankroll()="+bankroll()
-                    +", buy="+strategyName()
-                    +", eProfit()="+eProfit()+", sdProfit()="+sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()
-                    +", buyRate()="+buyRate()+", days()="+days()+", hProfit()="+hProfit()+"]";
+            return "Play [exchange()="+exchange()+", ticker()="+ticker()+", change()="+change()+", bankroll()="
+                    +bankroll()+", buy="+strategyName()+", eProfit()="+eProfit()+", sdProfit()="+sdProfit()+", pptd()="
+                    +pptd()+", winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()+", hProfit()="
+                    +hProfit()+"]";
         }
         Object[] arguments() { // maybe belongs in Plays?
-            Object[] arguments=new Object[] {exchange(),ticker(),
-                    date(),
-                    change(),
+            Object[] arguments=new Object[] {exchange(),ticker(),date(),change(),
                     // need  buy, date,
                     // no, we now have ticker and filename
                     // maybe just use ticker and add filename
@@ -283,80 +282,12 @@ public class Plays {
         fw.write(w.toString());
         fw.close();
     }
-    public void some(Path path,List<String> filenames,MyDate from,MyDate to,Strategy strategy) {
-        System.out.println("from: "+from);
-        System.out.println("to: "+to);
-        //for(int i=0;i<5;++i) System.out.println(filenames.get(i));
-        for(int index=0;index<filenames.size();++index) {
-            if(index>=maxFiles) break;
-            String filename=filenames.get(index);
-            Double[] prices=null;
-            List<String[]> rows=getCSV(path,filename);
-            System.out.println("map size;  "+map.size()+", index: "+index+", file: "+filename+" has data from: "
-                    +rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
-            prices=getClosingPrices(rows);
-            if(prices.length<minSize) { ++skippedFiles; continue; }
-            int length=260; // same as min size for now. about one year
-            if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
-            int start=prices.length-length;
-            int stop=prices.length;
-            String[] row=rows.get(start);
-            MyDate myDate=new MyDate(row[0]);
-            prices=filter(start,stop,prices);
-            if(prices.length==0) { System.out.println("no prices!"); continue; }
-            Play play=new Play(filename);
-            play.prices=prices;
-            play.strategyName=strategy.name; // this is just the name for csv.
-            play.date=myDate;
-            if(index==0) play.prologue(); // before
-            play.oneStock(strategy); // buy fails with array out of bounds
-            if(play.hProfit.n()>0) {
-                if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
-                //System.out.println("dt: "+(System.nanoTime()-play.t0));
-                // updates will co-mingle different buys.
-                play.update();
-            }
-            if(play!=null&&index==filenames.size()-1) play.prologue();
-            if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+hBankroll);
-        }
-        summary(map,"out.csv");
-    }
     public static List<String> files(Path path) {
         List<String> files;
         System.out.println("files are in: "+path);
         File dir=path.toFile();
         files=Arrays.asList(dir.list());
         return files;
-    }
-    void run(Strategy strategy) {
-        // name,bankroll,eProfit,sdProfit,pptd,winRate,buyRate,days,hProfit
-        // qbac-ws-b.us.txt, 14.29,  0.01,  0.07,   0.013,  0.52,   0.977,  260, "-0.15215711<=0.012809268/254<=0.48584905 117,[24,22,17,14,10,9,6,3,5,6],21 NaNs: 0"
-        // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
-        MyDate from=new MyDate("2000-01-01");
-        MyDate to=new MyDate("2023-01-01");
-        // the above dates do not seem to be used here.
-        System.out.println("from: "+from+", to: "+to);
-        Path path=Paths.get(rPath.toString(),"data","prices");
-        path=newPrices;
-        List<String> files=files(path);
-        System.out.println(files.size()+" files.");
-        System.out.println("start of processing filenames.");
-        System.out.println("<<<<<<<<<<<<<<<<<<");
-        // this reads file with data made by r program.
-        some(path,files,from,to,strategy);
-        System.out.println(">>>>>>>>>>>>>>>>>>");
-        System.out.println("map sze: "+map.size());
-        System.out.println("map: "+map);
-        System.out.println("key set: "+map.keySet());
-        System.out.println("end of processing filenames.");
-        System.out.println(skippedFiles+" skipped files.");
-        if(false) try {
-            filenames("newfilenames.txt");
-        } catch(IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } // save filenames in order
-          //System.out.println(getFilenames("filenames.txt"));
     }
     public static String toString(Histogram histogram) {
         return String.format("min: %5.2f, mean: %5.2f, max: %5.2f" //
@@ -383,17 +314,73 @@ public class Plays {
         // one(prices,strategies)
         // one(file,timePeriods,strategies)
         // some/run(files,timePeriods,strategies)
-
-        Plays[] plays=new Plays[n];
-        for(int i=0;i<n;++i) plays[i]=new Plays();
         // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
-        for(int i=0;i<n;++i) {
-            System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-            plays[i].maxFiles=staticMaxFiles;
-            plays[i].maxFiles=5;
-            plays[i].run(strategies.get(i));
-            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
+        Path path=Paths.get(rPath.toString(),"data","prices");
+        path=newPrices;
+        List<String> files=Plays.files(path);
+        System.out.println(files.size()+" files.");
+        System.out.println("start of processing filenames.");
+        System.out.println("<<<<<<<<<<<<<<<<<<");
+        for(int index=0;index<files.size();++index) {
+            if(index>=r.maxFiles) break;
+            String filename=files.get(index);
+            Double[] prices=null;
+            List<String[]> rows=getCSV(path,filename);
+            System.out.println("index: "+index+", file: "+filename+" has data from: "
+                    +rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
+            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
+                // maybe construct play here?
+                Plays[] plays=new Plays[n];
+                for(int strategyIndex=0;strategyIndex<n;++strategyIndex) plays[strategyIndex]=new Plays();
+                for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
+                    plays[strategyIndex].maxFiles=staticMaxFiles;
+                    plays[strategyIndex].maxFiles=5;
+                    Strategy strategy=strategies.get(strategyIndex);
+                    Plays r=plays[strategyIndex];
+                    System.out.println("map size; "+r.map.size());
+                    prices=getClosingPrices(rows);
+                    if(prices.length<r.minSize) { ++r.skippedFiles; continue; }
+                    int length=260; // same as min size for now. about one year
+                    if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
+                    int start=prices.length-length;
+                    int stop=prices.length;
+                    String[] row=rows.get(start);
+                    MyDate myDate=new MyDate(row[0]);
+                    prices=Plays.filter(start,stop,prices);
+                    if(prices.length==0) { System.out.println("no prices!"); continue; }
+                    // outer strategy look comes here.
+                    Play play=r.new Play(filename);
+                    play.prices=prices;
+                    play.strategyName=strategy.name; // this is just the name for csv.
+                    play.date=myDate;
+                    if(index==0) play.prologue(); // before
+                    play.oneStock(strategy); // buy fails with array out of bounds
+                    if(play.hProfit.n()>0) {
+                        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
+                        //System.out.println("dt: "+(System.nanoTime()-play.t0));
+                        // updates will co-mingle different buys.
+                        play.update();
+                    }
+                } // end of for each strategy
+            r.summary(r.map,"out.csv");
+            System.out.println(">>>>>>>>>>>>>>>>>>");
+            System.out.println("map sze: "+r.map.size());
+            System.out.println("map: "+r.map);
+            System.out.println("key set: "+r.map.keySet());
+            } // end of for each time period.
+            if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
+        } // end of for each file.
+        /*
+        System.out.println("end of processing filenames.");
+        System.out.println(r.skippedFiles+" skipped files.");
+        if(false) try {
+            r.filenames("newfilenames.txt"); // save filenames in order
+        } catch(IOException e) {
+            e.printStackTrace();
         }
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         boolean writeBuys=true;
         if(writeBuys) for(int i=0;i<n;++i) {
             Plays plays_=plays[i];
@@ -415,6 +402,7 @@ public class Plays {
         //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;
         if(writeBig) Plays.toCsvFile(combinedMap,"newbuyall.csv");
+        */
     }
     int verbosity=0; // for the outer class
     // initializers
