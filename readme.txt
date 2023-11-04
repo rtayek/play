@@ -108,6 +108,11 @@ change to
 done, but inner most loop has only one stock run in it
 how/ where to put the maps?
 maybe in the code loops instead of the class?
+not sure.
+
+incorporate code from Time into Plays.
+
+made deep equals for .csv data. working on time periods.
 				
 				
 			

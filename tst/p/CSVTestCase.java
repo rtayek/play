@@ -2,6 +2,7 @@ package p;
 import static org.junit.jupiter.api.Assertions.*;
 import static p.CSV.*;
 import static p.DataPaths.newPrices;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -9,13 +10,30 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 class CSVTestCase {
-    // these will fail if we download newer versions of the data.
+    // some of these will fail if we download newer versions of the data.
     @Test void testGetApple() {
         String filename="AAPL.csv";
         List<String[]> rows=getCSV(newPrices,filename);
         assertEquals(8524,rows.size());
     }
     @Test void testGetNewPrices() { List<String[]> rows=getNewPrices("AAPL"); assertEquals(8524,rows.size()); }
+    @Test void testCSVEquals() {
+        String[] x=new String[] {"a","b","c"};
+        String[] y=new String[] {"a","b","c"};
+        String[] z=new String[] {"a","b","z"};
+        ArrayList<String[]> lx=new ArrayList<>();
+        lx.add(x);
+        ArrayList<String[]> ly=new ArrayList<>();
+        ly.add(y);
+        assertTrue(CSV.equals(lx,ly));
+        ArrayList<String[]> lz=new ArrayList<>();
+        lz.add(z);
+        assertFalse(CSV.equals(lx,lz));
+        ly.add(z);
+        assertFalse(CSV.equals(ly,lz));
+        
+        }
+    
     @Test void testGetFilter() {
         List<String[]> rows=getNewPrices("AAPL");
         String[] first=rows.get(1);
@@ -24,25 +42,26 @@ class CSVTestCase {
         for(int i=1;i<6;++i) {
             String[] words=rows.get(i);
             MyDate myDate=new MyDate(words[0]);
-            System.out.println(myDate);
-            System.out.println(Arrays.asList(words));
+            //System.out.println(myDate);
+            //System.out.println(Arrays.asList(words));
         }
         MyDate from=new MyDate("1990-01-03");
         MyDate to=new MyDate("1990-01-05");
-        System.out.println("filtering from: "+from+" to: "+to);
+        //System.out.println("filtering from: "+from+" to: "+to);
         List<String[]> filtered=filter(rows,from.date(),to.date());
-        System.out.println("filtered");
+        //System.out.println("filtered");
         for(String[] row:filtered) {
-            System.out.println(Arrays.asList(row));
+            ; //System.out.println(Arrays.asList(row));
         }
         MyDate f=new MyDate(rows.get(2)[0]);
         MyDate t=new MyDate(rows.get(4)[0]);
-        System.out.println("filtering from: "+from+" to: "+to);
+        //System.out.println("filtering from: "+from+" to: "+to);
         List<String[]> filtered2=filter(rows,f.date(),t.date());
-        System.out.println("filtered2");
+        //System.out.println("filtered2");
         for(String[] row:filtered2) {
-            System.out.println(Arrays.asList(row));
+            ; //System.out.println(Arrays.asList(row));
         }
+        assertTrue(CSV.equals(filtered,filtered2));
         // seems to be working. why doesn't the code in Time work?
         // these filtered have a csv header.
         // do the ones in time have a header?

@@ -35,6 +35,30 @@ public class CSV { // utilities
         if(row[index].startsWith("\"")) row[index]=row[index].substring(1);
         if(row[index].endsWith("\"")) row[index]=row[index].substring(0,row[index].length()-1);
     }
+    public static ArrayList<Pair> timePeriods(final List<String[]> rows) {
+        List<String> header=Arrays.asList(rows.get(0));
+        System.out.println("header: "+header);
+        //System.out.println("row 1: "+Arrays.asList(rows.get(1)));
+        String f=rows.get(1)[0];
+        String l=rows.get(rows.size()-1)[0];
+        //System.out.println(f+" to "+l);
+        MyDate first=new MyDate(f);
+        MyDate last=new MyDate(l);
+        //System.out.println(first+" to "+last);
+        int year1=first.date().getYear()+1900;
+        int yearn=last.date().getYear()+1900;
+        //System.out.println(year1+" to "+yearn);
+        // maybe generate a list of (from,to) pairs
+        ArrayList<Pair> pairs=new ArrayList<>();
+        for(int i=year1;i<yearn;++i) { //
+            MyDate from=new MyDate(i+"-01-01");
+            MyDate to=new MyDate((i+1)+"-01-01"); // maybe use 02-01?
+            //System.out.println(from+" to "+to);
+            Pair pair=new Pair(from,to);
+            pairs.add(pair);
+        }
+        return pairs;
+    }
     public static List<String[]> filter(List<String[]> lines,Date from,Date to) {
         ArrayList<String[]> l=new ArrayList<>();
         if(lines.size()>0) l.add(lines.get(0)); // add csv header
@@ -97,6 +121,25 @@ public class CSV { // utilities
             //System.out.println("after: "+name);
         }
         return name;
+    }
+    public static boolean equals(List<String[]> x,List<String[]> y) {
+        if(x==y) return true;
+        if(x==null||y==null) return false;
+        if(x.size()!=y.size()) return false;
+        for(int i=0;i<x.size();++i) if(!Arrays.equals(x.get(i),y.get(i))) return false;
+        return true;
+    }
+    public static Pair indicesToDates(List<String[]> lines,int start,int stop) {
+        Date from=null;
+        Date to=null;
+        Pair pair=new Pair(from,to);
+        return pair;
+    }
+    public static Pair datesToindices(List<String[]> lines,Date from,Date to) {
+        Integer start=0;
+        Integer stop=0;
+        Pair pair=new Pair(start,stop);
+        return pair;
     }
     public String header() {
         StringBuffer stringBuffer=new StringBuffer();

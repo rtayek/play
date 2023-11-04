@@ -215,8 +215,8 @@ public class Plays {
             //static double initialBankroll=1;
         }
         public final long t0=System.nanoTime();
-        public MyDate date;
-        public String exchange; // maybe can not be final
+        public MyDate date; // start date for price data.
+        public String exchange; // maybe can not be final.
         public String strategyName;
         public final String ticker;
         public /*final*/ String filename; // so we can change it for different strategies.
@@ -233,9 +233,9 @@ public class Plays {
     } // end of class Play
     public static Double[] filter(int start,int stop,Double[] prices) {
         int n=stop-start; // use array copy?
-        Double[] p=new Double[n];
-        for(int i=start;i<stop;++i) p[i-start]=prices[i];
-        return p;
+        Double[] some=new Double[n];
+        for(int i=start;i<stop;++i) some[i-start]=prices[i];
+        return some;
     }
     static void toCsvFile(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         if(filename!=null) {
@@ -326,8 +326,10 @@ public class Plays {
             List<String[]> rows=getCSV(path,filename);
             System.out.println("index: "+index+", file: "+filename+" has data from: "+rows.get(1)[0]+" to: "
                     +rows.get(rows.size()-1)[0]);
-            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
-                // maybe construct play here?
+            ArrayList<Pair> pairs=timePeriods(rows);
+            System.out.println("number of time periods: "+pairs.size());
+            Pair pair=pairs.get(0);
+            System.out.println("first time period: "+pair.first+"  "+pair.second);            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
                 Plays[] plays=new Plays[n];
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
                     plays[strategyIndex]=new Plays();
@@ -336,21 +338,25 @@ public class Plays {
                     Strategy strategy=strategies.get(strategyIndex);
                     Plays plays_=plays[strategyIndex];
                     System.out.println("map size; "+plays_.map.size());
+                    // start of coe to move up.
                     prices=getClosingPrices(rows);
                     if(prices.length<plays_.minSize) { ++plays_.skippedFiles; continue; }
                     int length=260; // same as min size for now. about one year
                     if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
-                    int start=prices.length-length;
-                    int stop=prices.length;
-                    String[] row=rows.get(start);
-                    MyDate myDate=new MyDate(row[0]);
-                    prices=Plays.filter(start,stop,prices);
+                    int startIndex=prices.length-length;
+                    int stopIndex=prices.length;
+                    String[] row=rows.get(startIndex);
+                    MyDate myDateStart=new MyDate(row[0]);
+                    prices=Plays.filter(startIndex,stopIndex,prices);
+                    // need to filter with dates. maybe write a test case.
+                    // yes convert back and forth from  from/to to start/stop 
                     if(prices.length==0) { System.out.println("no prices!"); continue; }
                     // outer strategy look comes here.
                     Play play=plays_.new Play(filename);
                     play.prices=prices;
+                    // end of code to move up.
                     play.strategyName=strategy.name; // this is just the name for csv.
-                    play.date=myDate;
+                    play.date=myDateStart;
                     if(index==0) play.prologue(); // before
                     play.oneStock(strategy); // buy fails with array out of bounds
                     if(play.hProfit.n()>0) {
