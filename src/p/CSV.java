@@ -40,10 +40,15 @@ public class CSV { // utilities
         if(lines.size()>0) l.add(lines.get(0)); // add csv header
         for(int i=1;i<lines.size();++i) {
             String[] line=lines.get(i);
-            //System.out.println(Arrays.asList(line));
             MyDate myDate=new MyDate(line[0]);
-            if(MyDate.inRange(from,myDate.date(),to)) l.add(line);
+            if(MyDate.inRange(from,myDate.date(),to)) {
+                //System.out.println(i+" adding: "+myDate);
+                l.add(line);
+            }
         }
+        //System.out.println("first line: "+Arrays.asList(l.get(0)));
+        //System.out.println("second line: "+Arrays.asList(l.get(1)));
+        //System.out.println("last line: "+Arrays.asList(l.get(l.size()-1)));
         return l;
     }
     public static List<String[]> getCSV(Path path,String filename) {

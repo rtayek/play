@@ -21,7 +21,7 @@ class CSVTestCase {
         String[] first=rows.get(1);
         String[] last=rows.get(rows.size()-1);
         System.out.println(first[0]+" "+last[0]);
-        for(int i=1;i<5;++i) {
+        for(int i=1;i<6;++i) {
             String[] words=rows.get(i);
             MyDate myDate=new MyDate(words[0]);
             System.out.println(myDate);
@@ -35,5 +35,16 @@ class CSVTestCase {
         for(String[] row:filtered) {
             System.out.println(Arrays.asList(row));
         }
+        MyDate f=new MyDate(rows.get(2)[0]);
+        MyDate t=new MyDate(rows.get(4)[0]);
+        System.out.println("filtering from: "+from+" to: "+to);
+        List<String[]> filtered2=filter(rows,f.date(),t.date());
+        System.out.println("filtered2");
+        for(String[] row:filtered2) {
+            System.out.println(Arrays.asList(row));
+        }
+        // seems to be working. why doesn't the code in Time work?
+        // these filtered have a csv header.
+        // do the ones in time have a header?
     }
 }
