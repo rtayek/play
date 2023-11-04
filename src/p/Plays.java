@@ -101,10 +101,10 @@ public class Plays {
         // also maybe add the buy strategy to the data frame. 
         // also, add the change in value over the prices to the data frame.
         @Override public String toString() {
-            return "Play [exchange()="+exchange()+", ticker()="+ticker()+", change()="+change()+", bankroll()="
-                    +bankroll()+", buy="+strategyName()+", eProfit()="+eProfit()+", sdProfit()="+sdProfit()+", pptd()="
-                    +pptd()+", winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()+", hProfit()="
-                    +hProfit()+"]";
+            return "Play [exchange()="+exchange()+", ticker()="+ticker()+", date()="+date()+", change()="+change()
+                    +", bankroll()="+bankroll()+", buy="+strategyName()+", eProfit()="+eProfit()+", sdProfit()="
+                    +sdProfit()+", pptd()="+pptd()+", winRate()="+winRate()+", buyRate()="+buyRate()+", days()="+days()
+                    +", hProfit()="+hProfit()+"]";
         }
         Object[] arguments() { // maybe belongs in Plays?
             Object[] arguments=new Object[] {exchange(),ticker(),date(),change(),
@@ -114,7 +114,7 @@ public class Plays {
                     bankroll(),strategyName(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
             return arguments;
         }
-        public String toCSVLine() {
+        public String toCSVLine() { // combine  with ?
             String s=result.toString(arguments());
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
@@ -159,6 +159,7 @@ public class Plays {
         }
         public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
             // maybe use values()? - just the Play[]?
+            // maybe move to plays?
             StringWriter w=new StringWriter();
             w.write(result.header()+'\n');
             for(Object d:map.keySet()) {
@@ -192,21 +193,14 @@ public class Plays {
             for(String name=br.readLine();name!=null;name=br.readLine()) list.add(name);
             return list;
         }
+        public double jitter() { return random.nextGaussian(0,1e-7); }
         public void update() { // values now in outer class
             // this is fine where it it.
             hBankroll.add(bankroll());
             hExpectation.add(hProfit().mean());
             hWinRate.add(winRate());
             hBuyRate.add(buyRate());
-            // hack key so it's unique
-            long dt=System.nanoTime()-t0;
-            double d=bankroll();
-            double factor=dt/100_000_000.;
-            //System.out.println("dt2: "+dt+", factor: "+factor);
-            double key=-(bankroll()+factor); // this breaks sort order!
-            Random r=new Random();
-            double x=r.nextGaussian(0,1e-7);
-            key=-bankroll()+x;
+            double key=-bankroll()+jitter(); // hack key so it's unique
             if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
             map.put(key,this);
         }
@@ -270,6 +264,7 @@ public class Plays {
         System.out.println("end of summary for "+hBankroll.n()+" files");
     }
     public void filenames(String filename) throws IOException {
+        // maybe pass in map and make static so other programs can use this?
         StringWriter w=new StringWriter();
         for(Object d:map.keySet()) {
             Play play=map.get(d);
@@ -323,25 +318,26 @@ public class Plays {
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
         System.out.println("<<<<<<<<<<<<<<<<<<");
+        staticMaxFiles=5;
         for(int index=0;index<files.size();++index) {
-            if(index>=r.maxFiles) break;
+            if(index>=staticMaxFiles) break;
             String filename=files.get(index);
             Double[] prices=null;
             List<String[]> rows=getCSV(path,filename);
-            System.out.println("index: "+index+", file: "+filename+" has data from: "
-                    +rows.get(1)[0]+" to: "+rows.get(rows.size()-1)[0]);
+            System.out.println("index: "+index+", file: "+filename+" has data from: "+rows.get(1)[0]+" to: "
+                    +rows.get(rows.size()-1)[0]);
             for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
                 // maybe construct play here?
                 Plays[] plays=new Plays[n];
-                for(int strategyIndex=0;strategyIndex<n;++strategyIndex) plays[strategyIndex]=new Plays();
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
+                    plays[strategyIndex]=new Plays();
                     plays[strategyIndex].maxFiles=staticMaxFiles;
                     plays[strategyIndex].maxFiles=5;
                     Strategy strategy=strategies.get(strategyIndex);
-                    Plays r=plays[strategyIndex];
-                    System.out.println("map size; "+r.map.size());
+                    Plays plays_=plays[strategyIndex];
+                    System.out.println("map size; "+plays_.map.size());
                     prices=getClosingPrices(rows);
-                    if(prices.length<r.minSize) { ++r.skippedFiles; continue; }
+                    if(prices.length<plays_.minSize) { ++plays_.skippedFiles; continue; }
                     int length=260; // same as min size for now. about one year
                     if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
                     int start=prices.length-length;
@@ -351,7 +347,7 @@ public class Plays {
                     prices=Plays.filter(start,stop,prices);
                     if(prices.length==0) { System.out.println("no prices!"); continue; }
                     // outer strategy look comes here.
-                    Play play=r.new Play(filename);
+                    Play play=plays_.new Play(filename);
                     play.prices=prices;
                     play.strategyName=strategy.name; // this is just the name for csv.
                     play.date=myDate;
@@ -363,46 +359,44 @@ public class Plays {
                         // updates will co-mingle different buys.
                         play.update();
                     }
+                    combinedMap.putAll(plays_.map); // combine results from different strategies.
                 } // end of for each strategy
-            r.summary(r.map,"out.csv");
-            System.out.println(">>>>>>>>>>>>>>>>>>");
-            System.out.println("map sze: "+r.map.size());
-            System.out.println("map: "+r.map);
-            System.out.println("key set: "+r.map.keySet());
+                boolean writeBuys=false;
+                if(writeBuys) for(int i=0;i<n;++i) {
+                    Plays plays_=plays[i];
+                    // these plays are for each strategy
+                    // with a different filename for each strategy
+                    // now we will have time period and strategy
+                    // in the single cvs file for each file 
+                    // or one big file!
+                    Play.toCSV(plays_.map);
+                    toCsvFile(plays_.map,"buy"+"."+filename+"."+periodIndexi1+".csv");
+                }
+                //r.summary(r.map,"out.csv");
+                /*
+                System.out.println(">>>>>>>>>>>>>>>>>>");
+                System.out.println("map sze: "+r.map.size());
+                System.out.println("map: "+r.map);
+                System.out.println("key set: "+r.map.keySet());
+                */
             } // end of for each time period.
-            if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
+              //if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
         } // end of for each file.
-        /*
+          // write a csv file here.
         System.out.println("end of processing filenames.");
-        System.out.println(r.skippedFiles+" skipped files.");
+        //System.out.println(r.skippedFiles+" skipped files.");
+        /*
         if(false) try {
             r.filenames("newfilenames.txt"); // save filenames in order
         } catch(IOException e) {
             e.printStackTrace();
         }
+        */
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        boolean writeBuys=true;
-        if(writeBuys) for(int i=0;i<n;++i) {
-            Plays plays_=plays[i];
-            toCsvFile(plays_.map,"buy"+i+".csv");
-        }
-        boolean writeTickes=true;
-        if(writeTickes) for(int i=0;i<n;++i) {
-            Plays plays_=plays[i];
-            //toCsv(plays_.map,"buy"+i+".csv");
-        }
-        for(int i=0;i<n;++i) { // mung the filenames
-            for(Play play:plays[i].map.values()) { play.filename=play.filename+" "+i; }
-            // this adds the buy index to the filename
-        }
-        // combine the different strategies.
-        SortedMap<Comparable<?>,Play> combinedMap=new TreeMap<>();
-        for(int i=0;i<n;++i) combinedMap.putAll(plays[i].map); // combine results from different strategies.
         System.out.println("map:");
         //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;
         if(writeBig) Plays.toCsvFile(combinedMap,"newbuyall.csv");
-        */
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -412,12 +406,14 @@ public class Plays {
     double initialBankroll=1;
     // accumulators
     int skippedFiles=0;
-    SortedMap<Comparable<?>,Play> map=new TreeMap<>();
+    Random random=new Random();
+    TreeMap<Comparable<?>,Play> map=new TreeMap<>();
     Histogram hBankroll=new Histogram(10,0,10);
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
     static int staticMaxFiles=Integer.MAX_VALUE;
+    static TreeMap<Comparable<?>,Play> combinedMap=new TreeMap<>();
     static final CSV result=new CSV() {
         {
             pairs.add(new Pair("exchange","%-3s"));

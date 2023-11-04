@@ -17,7 +17,7 @@ class MyDate {
         try {
             out=simpleDateFormat.parse(string);
         } catch(ParseException e) {
-            System.out.println("fails: "+string);
+            System.out.println("date() fails: "+string);
             e.printStackTrace();
         }
         return out;

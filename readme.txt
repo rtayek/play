@@ -103,7 +103,14 @@ change to
 	foreach file
 		foreach time period
 			foreach strategy
-				do one time period.
+				do one stock
+				
+done, but inner most loop has only one stock run in it
+how/ where to put the maps?
+maybe in the code loops instead of the class?
+				
+				
+			
 
 
 

@@ -37,7 +37,7 @@ public class CSV { // utilities
     }
     public static List<String[]> filter(List<String[]> lines,Date from,Date to) {
         ArrayList<String[]> l=new ArrayList<>();
-        if(lines.size()>0) l.add(lines.get(0));
+        if(lines.size()>0) l.add(lines.get(0)); // add csv header
         for(int i=1;i<lines.size();++i) {
             String[] line=lines.get(i);
             //System.out.println(Arrays.asList(line));
