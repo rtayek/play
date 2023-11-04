@@ -2,7 +2,16 @@ package p;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 class MyDate {
+    @Override public int hashCode() { return Objects.hash(date); }
+    @Override public boolean equals(Object obj) {
+        if(this==obj) return true;
+        if(obj==null) return false;
+        if(getClass()!=obj.getClass()) return false;
+        MyDate other=(MyDate)obj;
+        return Objects.equals(date,other.date);
+    }
     MyDate() { this(new Date()); }
     MyDate(Date date) { this.date=date; }
     MyDate(String string) { this(string,new SimpleDateFormat(defaultPattern)); }

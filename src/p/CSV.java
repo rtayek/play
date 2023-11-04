@@ -129,15 +129,28 @@ public class CSV { // utilities
         for(int i=0;i<x.size();++i) if(!Arrays.equals(x.get(i),y.get(i))) return false;
         return true;
     }
+    public static Integer indexOf(List<String[]> lines,MyDate target) {
+        // how to deal with missing?
+        // find the last that is <= target
+        // find the first that is >= tagret
+        for(int i=1;i<lines.size();++i) { // starts at 1| assumes a header!
+            MyDate myDate=new MyDate(lines.get(i)[0]);
+            if(myDate.date().equals(target.date())) return i;
+        }
+        return null;
+    }
     public static Pair indicesToDates(List<String[]> lines,int start,int stop) {
-        Date from=null;
-        Date to=null;
+        String f=lines.get(start)[0];
+        String t=lines.get(stop)[0];
+        MyDate from=new MyDate(f);
+        MyDate to=new MyDate(t);
         Pair pair=new Pair(from,to);
         return pair;
     }
-    public static Pair datesToindices(List<String[]> lines,Date from,Date to) {
-        Integer start=0;
-        Integer stop=0;
+    public static Pair datesToindices(List<String[]> lines,MyDate from,MyDate to) {
+        // find index of the dates.
+        Integer start=indexOf(lines,from);
+        Integer stop=indexOf(lines,to);
         Pair pair=new Pair(start,stop);
         return pair;
     }

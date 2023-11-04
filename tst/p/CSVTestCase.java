@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.tayek.util.Pair;
 class CSVTestCase {
     // some of these will fail if we download newer versions of the data.
     @Test void testGetApple() {
@@ -31,9 +32,30 @@ class CSVTestCase {
         assertFalse(CSV.equals(lx,lz));
         ly.add(z);
         assertFalse(CSV.equals(ly,lz));
-        
-        }
-    
+    }
+    @Test void testIndicesToDates() {
+        List<String[]> rows=getNewPrices("AAPL");
+        //System.out.println(1+" "+(rows.size()-1));
+        String f=rows.get(1)[0];
+        String l=rows.get(rows.size()-1)[0];
+        MyDate first=new MyDate(f);
+        MyDate last=new MyDate(l);
+        //System.out.println("first:  "+first+", last: "+last);
+        Pair indices=datesToindices(rows,first,last);
+        Integer start=(Integer)indices.first;
+        Integer stop=(Integer)indices.second;
+        //System.out.println("start: "+start+", stop: "+stop);
+        Pair dates=indicesToDates(rows,start,stop);
+        MyDate first2=(MyDate)dates.first;
+        MyDate last2=(MyDate)dates.second;
+        //System.out.println("first2: "+first2+", last2: "+last2);
+        Pair indices2=datesToindices(rows,first,last);
+        //System.out.println(indices2.first+" "+indices.second);
+        assertEquals(1,indices2.first);
+        assertEquals(rows.size()-1,indices2.second);
+        assertEquals(first,first2);
+        assertEquals(last,last2);
+    }
     @Test void testGetFilter() {
         List<String[]> rows=getNewPrices("AAPL");
         String[] first=rows.get(1);
