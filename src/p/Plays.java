@@ -332,9 +332,21 @@ public class Plays {
             System.out.println("first time period: "+pair.first+"  "+pair.second);
             for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
                 // code from below goes here?
+                // start of code to move up.
+                prices=getClosingPrices(rows);
+                if(prices.length<Plays.minSize) { ++Plays.skippedFiles; continue; }
+                int length=260; // same as min size for now. about one year
+                if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
+                int startIndex=prices.length-length;
+                int stopIndex=prices.length;
+                String[] row=rows.get(startIndex);
+                MyDate myDateStart=new MyDate(row[0]);
+                prices=Plays.filterPrices(startIndex,stopIndex,prices);
+                // need to filter with dates.  
+                if(prices.length==0) { System.out.println("no prices!"); continue; }
+                // end of code to move up.
                 // this will have to filter by date.
                 // maybe use instance of Integer, MyDate etc. 
-                
                 Plays[] plays=new Plays[n];
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
                     plays[strategyIndex]=new Plays();
@@ -344,19 +356,6 @@ public class Plays {
                     Plays plays_=plays[strategyIndex];
                     System.out.println("map size; "+plays_.map.size());
                     // moved code was here
-                    // start of code to move up.
-                    prices=getClosingPrices(rows);
-                    if(prices.length<plays_.minSize) { ++plays_.skippedFiles; continue; }
-                    int length=260; // same as min size for now. about one year
-                    if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
-                    int startIndex=prices.length-length;
-                    int stopIndex=prices.length;
-                    String[] row=rows.get(startIndex);
-                     MyDate myDateStart=new MyDate(row[0]);
-                    prices=Plays.filterPrices(startIndex,stopIndex,prices);
-                    // need to filter with dates.  
-                    if(prices.length==0) { System.out.println("no prices!"); continue; }
-                    // end of code to move up.
                     Play play=plays_.new Play(filename);
                     play.prices=prices;
                     play.strategyName=strategy.name; // this is just the name for csv.
@@ -410,18 +409,19 @@ public class Plays {
     }
     int verbosity=0; // for the outer class
     // initializers
-    int startAt=0,minSize=260,maxsize=260;
+    int startAt=0;
     int maxFiles=Integer.MAX_VALUE;
     int buffer=5,forecast=3;
     double initialBankroll=1;
     // accumulators
-    int skippedFiles=0;
     Random random=new Random();
     TreeMap<Comparable<?>,Play> map=new TreeMap<>();
     Histogram hBankroll=new Histogram(10,0,10);
     Histogram hExpectation=new Histogram(10,0,1);
     Histogram hWinRate=new Histogram(10,0,1);
     Histogram hBuyRate=new Histogram(10,0,1);
+    static int minSize=260,maxsize=260;
+    static int skippedFiles=0; // may need to be static
     static int staticMaxFiles=Integer.MAX_VALUE;
     static TreeMap<Comparable<?>,Play> combinedMap=new TreeMap<>();
     static final CSV result=new CSV() {
