@@ -228,12 +228,6 @@ public class Plays {
         public double rake=.0;
         public int verbosity=0;
     } // end of class Play
-    public static Double[] filterPrices(int start,int stop,Double[] prices) {
-        int n=stop-start; // use array copy?
-        Double[] some=new Double[n];
-        for(int i=start;i<stop;++i) some[i-start]=prices[i];
-        return some;
-    }
     static void toCsvFile(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
         if(filename!=null) {
             System.out.println("writing: "+map.size()+" entries to: "+filename);
@@ -291,6 +285,7 @@ public class Plays {
     }
     public static void main(String[] args) throws IOException {
         System.out.println("enter main()");
+        staticMaxFiles=5;
         /*
         System.out.println("make some stocks");
         SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
@@ -314,63 +309,66 @@ public class Plays {
         List<String> files=Plays.files(path);
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
-        System.out.println("<<<<<<<<<<<<<<<<<<");
-        //staticMaxFiles=5;
         for(int index=0;index<files.size();++index) {
             if(index>=staticMaxFiles) break;
             String filename=files.get(index);
             List<String[]> rows=getCSV(path,filename);
             System.out.println("index: "+index+", file: "+filename+" has "+rows.size()+" rows.");
-            if(rows.size()<=2) { // assuming we always have a header
-                System.out.println(filename+" has: "+rows.size()+" rows!");
-                continue;
-            }
+            if(rows.size()<=1) { System.out.println(filename+" has: "+rows.size()+" rows!"); continue; }
+            if(rows.size()<=2) { System.out.println(filename+" has: "+rows.size()+" rows!"); continue; }
             System.out.println("index: "+index+", file: "+filename+" has data from: "+rows.get(1)[0]+" to: "
                     +rows.get(rows.size()-1)[0]);
-
+            System.out.println("first row"+Arrays.asList(rows.get(0)));
+            if(!rows.get(0)[0].contains("Index")) {
+                System.out.println(filename+" has no header!");
+                System.out.println("first cell: "+rows.get(0)[0]);
+                throw new RuntimeException();
+                //continue;
+            }
             final Double[] allPrices=getClosingPrices(rows);
-            if(allPrices.length<1) {
-                System.out.println(filename+" has: "+allPrices.length+" prices!");
+            if(allPrices.length<1) { System.out.println(filename+" has: "+allPrices.length+" prices!"); continue; }
+            if(allPrices.length<minSize) {
+                System.out.println("too  small: "+filename);
+                ++Plays.skippedFiles;
                 continue;
             }
-            ArrayList<Pair> pairs=timePeriods(rows);
+            ArrayList<Pair> pairs=null;
+            boolean useDates=false;
+            if(useDates) {
+                pairs=timePeriodDates(rows);
+            } else {
+                pairs=timePeriodIndices(rows);
+            }
             System.out.println("number of time periods: "+pairs.size());
-            if(pairs.size()==0) {
-                System.out.println("no time periods");
-                continue;
-            }
+            if(pairs.size()==0) { System.out.println("no time periods"); continue; }
             Pair pair=pairs.get(0);
             System.out.println("first time period: "+pair.first+"  "+pair.second);
-            // generate a list of time periods.
-            int length=260; // same as min size for now. about one year
-            ArrayList<Pair> timePeriods=new ArrayList<>();
-            for(int startIndex=allPrices.length-length,
-                    stopIndex=allPrices.length;startIndex>=0;startIndex-=length,stopIndex-=length) {
-                timePeriods.add(new Pair(startIndex,stopIndex));
-            }
-            System.out.println(timePeriods);
+            System.out.println(pairs);
             int maxPeriods=2;
-            int periods=Math.min(maxPeriods,timePeriods.size());
-            for(int period=0;period<periods;++period) { // will be date ranges/ time periods
-                System.out.println("time period: "+timePeriods.get(period));
-                int startIndex=(int)timePeriods.get(period).first;
-                int stopIndex=(int)timePeriods.get(period).second;
-                // maybe just use start and stop for now to get multiple time periods
-                // we can add the date stuff later.
-                // code from below goes here?
-                // start of code to move up.
-                if(allPrices.length<Plays.minSize) { ++Plays.skippedFiles; continue; }
-                if(allPrices.length<length) { System.out.println("too  small: "+filename); continue; }
-                String[] row=rows.get(startIndex);
-                MyDate myDateStart=new MyDate(row[0]);
-                //System.out.println("startat: "+myDateStart+" "+startIndex+" "+stopIndex);
-                final Double[] prices=Plays.filterPrices(startIndex,stopIndex,allPrices);
-                //System.out.println("first price: "+prices[0]);
-                // need to filter with dates.  
+            int periods=Math.min(maxPeriods,pairs.size());
+            for(int period=0;period<periods;++period) { // will be date ranges/indices  periods
+                System.out.println("time period: "+pairs.get(period));
+                Double[] prices=null;
+                MyDate myDateStart=null;
+                if(useDates) {
+                    MyDate startDate=(MyDate)pairs.get(period).first;
+                    MyDate stopDate=(MyDate)pairs.get(period).second;
+                    myDateStart=startDate;
+                    //  no guarantee that these dates will be in the data!
+                    //String[] row=rows.get(startIndex);
+                    // filter with dates
+                    List<String[]> someRows=filter(rows,startDate.date,stopDate.date);
+                    prices=getClosingPrices(someRows);
+                } else {
+                    int startIndex=(int)pairs.get(period).first;
+                    int stopIndex=(int)pairs.get(period).second;
+                    String[] row=rows.get(startIndex);
+                    myDateStart=new MyDate(row[0]);
+                    System.out.println("start at: "+myDateStart+" "+startIndex+" "+stopIndex);
+                    prices=filterPrices(startIndex,stopIndex,allPrices);
+                    // this could filter on dates we know are present?
+                }
                 if(prices.length==0) { System.out.println("no prices!"); continue; }
-                // end of code to move up.
-                // this will have to filter by date.
-                // maybe use instance of Integer, MyDate etc. 
                 Plays[] plays=new Plays[n];
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
                     plays[strategyIndex]=new Plays();
@@ -382,12 +380,10 @@ public class Plays {
                     play.prices=prices;
                     play.strategyName=strategy.name; // this is just the name for csv.
                     play.date=myDateStart;
-                    if(index==0) play.prologue(); // before
-                    play.oneStock(strategy); // buy fails with array out of bounds
+                    //if(index==0) play.prologue(); // before
+                    play.oneStock(strategy);
                     if(play.hProfit.n()>0) {
                         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
-                        //System.out.println("dt: "+(System.nanoTime()-play.t0));
-                        // updates will co-mingle different buys.
                         System.out.println(play);
                         play.update();
                     }
@@ -418,7 +414,6 @@ public class Plays {
             e.printStackTrace();
         }
         */
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println("map:");
         //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;

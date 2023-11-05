@@ -15,11 +15,14 @@ import static p.CSV.*;
 class TimePeriodTestCase {
     @BeforeEach void setUp() throws Exception {}
     @AfterEach void tearDown() throws Exception {}
-    @Test void test() {
+    @Test void test() { // this may break if the data changes
         String ticker="AAPL";
         final List<String[]> rows=getNewPrices(ticker);
-        ArrayList<Pair> pairs=timePeriods(rows);
-        for(Pair pair:pairs) System.out.println(pair.first+"  "+pair.second);
-        // this may break if the data changes
+        ArrayList<Pair> pairs=timePeriodDates(rows);
+        for(Pair pair:pairs) { 
+            System.out.println(pair.first+"  "+pair.second);
+            // lets convert to indices and try to convert back.
+            
+            }
     }
 }

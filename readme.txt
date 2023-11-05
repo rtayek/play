@@ -121,6 +121,21 @@ we got prices data from 15730 of them
 9168 of the stocks have some problem getting the price data.
 about 500-600  of them return more than 1.2.
 
+consider a loop like  readyahoo.R that starts with say 500.
+and then loop through the time periods, add in the highest values.
+
+probably should write some tests to see if this agrees with the r code.
+
+maybe make dates start a the beginning of the year.
+
+looks like it may be working with date and indices ranges!
+
+
+
+
+
+ 
+
 
 			
 			

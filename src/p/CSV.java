@@ -35,9 +35,17 @@ public class CSV { // utilities
         if(row[index].startsWith("\"")) row[index]=row[index].substring(1);
         if(row[index].endsWith("\"")) row[index]=row[index].substring(0,row[index].length()-1);
     }
-    public static ArrayList<Pair> timePeriods(final List<String[]> rows) {
+    public static ArrayList<Pair> timePeriodIndices(final List<String[]> rows) {
+        int minSize=260; // dup. fix this!!
+        ArrayList<Pair> pairs=new ArrayList<>();
+        for(int startIndex=rows.size()-minSize-1,
+                stopIndex=rows.size()-1;startIndex>=0;startIndex-=minSize,stopIndex-=minSize) {
+            pairs.add(new Pair(startIndex,stopIndex));
+        }
+        return pairs;
+    }
+    public static ArrayList<Pair> timePeriodDates(final List<String[]> rows) {
         List<String> header=Arrays.asList(rows.get(0));
-        System.out.println("header: "+header);
         //System.out.println("row 1: "+Arrays.asList(rows.get(1)));
         String f=rows.get(1)[0];
         String l=rows.get(rows.size()-1)[0];
@@ -58,6 +66,14 @@ public class CSV { // utilities
             pairs.add(pair);
         }
         return pairs;
+    }
+    public static Double[] filterPrices(int start,int stop,Double[] prices) {
+        // this works on prices
+        // can we make it work on rows instead?
+        int n=stop-start; // use array copy?
+        Double[] some=new Double[n];
+        for(int i=start;i<stop;++i) some[i-start]=prices[i];
+        return some;
     }
     public static List<String[]> filter(List<String[]> lines,Date from,Date to) {
         ArrayList<String[]> l=new ArrayList<>();

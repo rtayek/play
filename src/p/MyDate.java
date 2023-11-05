@@ -48,7 +48,7 @@ class MyDate {
         System.out.println(out);
         System.out.println(myDate);
     }
-    private final Date date;
+    public final Date date;
     static String defaultPattern="yyyy-MM-dd";
     SimpleDateFormat simpleDateFormat=new SimpleDateFormat(defaultPattern);
 }

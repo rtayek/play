@@ -21,7 +21,7 @@ public class Time {
         Strategy strategy=strategy2;
         TreeMap<Comparable<?>,Play> map=new TreeMap<>();
         // maybe generate a list of (from,to) pairs
-        ArrayList<Pair> pairs=timePeriods(rows);
+        ArrayList<Pair> pairs=timePeriodDates(rows);
         for(Pair pair:pairs) {
             //for(int i=1990;i<=2022;++i) {
             //System.out.println("enter loop");
