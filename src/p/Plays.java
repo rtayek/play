@@ -231,7 +231,7 @@ public class Plays {
         public double rake=.0;
         public int verbosity=0;
     } // end of class Play
-    public static Double[] filter(int start,int stop,Double[] prices) {
+    public static Double[] filterPrices(int start,int stop,Double[] prices) {
         int n=stop-start; // use array copy?
         Double[] some=new Double[n];
         for(int i=start;i<stop;++i) some[i-start]=prices[i];
@@ -329,7 +329,12 @@ public class Plays {
             ArrayList<Pair> pairs=timePeriods(rows);
             System.out.println("number of time periods: "+pairs.size());
             Pair pair=pairs.get(0);
-            System.out.println("first time period: "+pair.first+"  "+pair.second);            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
+            System.out.println("first time period: "+pair.first+"  "+pair.second);
+            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
+                // code from below goes here?
+                // this will have to filter by date.
+                // maybe use instance of Integer, MyDate etc. 
+                
                 Plays[] plays=new Plays[n];
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
                     plays[strategyIndex]=new Plays();
@@ -338,7 +343,8 @@ public class Plays {
                     Strategy strategy=strategies.get(strategyIndex);
                     Plays plays_=plays[strategyIndex];
                     System.out.println("map size; "+plays_.map.size());
-                    // start of coe to move up.
+                    // moved code was here
+                    // start of code to move up.
                     prices=getClosingPrices(rows);
                     if(prices.length<plays_.minSize) { ++plays_.skippedFiles; continue; }
                     int length=260; // same as min size for now. about one year
@@ -346,15 +352,13 @@ public class Plays {
                     int startIndex=prices.length-length;
                     int stopIndex=prices.length;
                     String[] row=rows.get(startIndex);
-                    MyDate myDateStart=new MyDate(row[0]);
-                    prices=Plays.filter(startIndex,stopIndex,prices);
-                    // need to filter with dates. maybe write a test case.
-                    // yes convert back and forth from  from/to to start/stop 
+                     MyDate myDateStart=new MyDate(row[0]);
+                    prices=Plays.filterPrices(startIndex,stopIndex,prices);
+                    // need to filter with dates.  
                     if(prices.length==0) { System.out.println("no prices!"); continue; }
-                    // outer strategy look comes here.
+                    // end of code to move up.
                     Play play=plays_.new Play(filename);
                     play.prices=prices;
-                    // end of code to move up.
                     play.strategyName=strategy.name; // this is just the name for csv.
                     play.date=myDateStart;
                     if(index==0) play.prologue(); // before

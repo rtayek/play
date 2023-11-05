@@ -114,7 +114,7 @@ incorporate code from Time into Plays.
 
 made deep equals for .csv data. working on time periods.
 				
-				
+working on moving date code up in Plays.main();				
 			
 
 
