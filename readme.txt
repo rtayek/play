@@ -114,7 +114,15 @@ incorporate code from Time into Plays.
 
 made deep equals for .csv data. working on time periods.
 				
-working on moving date code up in Plays.main();				
+working on moving date code up in Plays.main();	
+seems to work.
+we have 106329stocks in the yahoo file.
+we got prices data from 15730 of them
+9168 of the stocks have some problem getting the price data.
+about 500-600  of them return more than 1.2.
+
+
+			
 			
 
 

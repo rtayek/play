@@ -205,14 +205,11 @@ public class Plays {
             map.put(key,this);
         }
         public void prologue() {
-            System.out.format("start at: %4d, min:  %4d, nax: %4d\n" //
-                    +"br: %7.2f, bet: %5.2f, rake: %.2f, max files: %5d"+", buy: "+"\n", //
-                    startAt,minSize,maxsize, //
-                    bankroll,bet,rake,maxFiles //
+            System.out.format("min:  %4d, nax: %4d\n" //
+                    +"br: %7.2f, bet: %5.2f, rake: %.2f\n", //
+                    minSize,maxsize, //
+                    bankroll,bet,rake //
             );
-            //static int maxFiles=Integer.MAX_VALUE;
-            //static int buffer=5,forecast=3;
-            //static double initialBankroll=1;
         }
         public final long t0=System.nanoTime();
         public MyDate date; // start date for price data.
@@ -318,30 +315,57 @@ public class Plays {
         System.out.println(files.size()+" files.");
         System.out.println("start of processing filenames.");
         System.out.println("<<<<<<<<<<<<<<<<<<");
-        staticMaxFiles=5;
+        //staticMaxFiles=5;
         for(int index=0;index<files.size();++index) {
             if(index>=staticMaxFiles) break;
             String filename=files.get(index);
-            Double[] prices=null;
             List<String[]> rows=getCSV(path,filename);
+            System.out.println("index: "+index+", file: "+filename+" has "+rows.size()+" rows.");
+            if(rows.size()<=2) { // assuming we always have a header
+                System.out.println(filename+" has: "+rows.size()+" rows!");
+                continue;
+            }
             System.out.println("index: "+index+", file: "+filename+" has data from: "+rows.get(1)[0]+" to: "
                     +rows.get(rows.size()-1)[0]);
+
+            final Double[] allPrices=getClosingPrices(rows);
+            if(allPrices.length<1) {
+                System.out.println(filename+" has: "+allPrices.length+" prices!");
+                continue;
+            }
             ArrayList<Pair> pairs=timePeriods(rows);
             System.out.println("number of time periods: "+pairs.size());
+            if(pairs.size()==0) {
+                System.out.println("no time periods");
+                continue;
+            }
             Pair pair=pairs.get(0);
             System.out.println("first time period: "+pair.first+"  "+pair.second);
-            for(int periodIndexi1=0;periodIndexi1<1;++periodIndexi1) { // will be date ranges/ time periods
+            // generate a list of time periods.
+            int length=260; // same as min size for now. about one year
+            ArrayList<Pair> timePeriods=new ArrayList<>();
+            for(int startIndex=allPrices.length-length,
+                    stopIndex=allPrices.length;startIndex>=0;startIndex-=length,stopIndex-=length) {
+                timePeriods.add(new Pair(startIndex,stopIndex));
+            }
+            System.out.println(timePeriods);
+            int maxPeriods=2;
+            int periods=Math.min(maxPeriods,timePeriods.size());
+            for(int period=0;period<periods;++period) { // will be date ranges/ time periods
+                System.out.println("time period: "+timePeriods.get(period));
+                int startIndex=(int)timePeriods.get(period).first;
+                int stopIndex=(int)timePeriods.get(period).second;
+                // maybe just use start and stop for now to get multiple time periods
+                // we can add the date stuff later.
                 // code from below goes here?
                 // start of code to move up.
-                prices=getClosingPrices(rows);
-                if(prices.length<Plays.minSize) { ++Plays.skippedFiles; continue; }
-                int length=260; // same as min size for now. about one year
-                if(prices.length<length) { System.out.println("too  small: "+filename); continue; }
-                int startIndex=prices.length-length;
-                int stopIndex=prices.length;
+                if(allPrices.length<Plays.minSize) { ++Plays.skippedFiles; continue; }
+                if(allPrices.length<length) { System.out.println("too  small: "+filename); continue; }
                 String[] row=rows.get(startIndex);
                 MyDate myDateStart=new MyDate(row[0]);
-                prices=Plays.filterPrices(startIndex,stopIndex,prices);
+                //System.out.println("startat: "+myDateStart+" "+startIndex+" "+stopIndex);
+                final Double[] prices=Plays.filterPrices(startIndex,stopIndex,allPrices);
+                //System.out.println("first price: "+prices[0]);
                 // need to filter with dates.  
                 if(prices.length==0) { System.out.println("no prices!"); continue; }
                 // end of code to move up.
@@ -350,11 +374,9 @@ public class Plays {
                 Plays[] plays=new Plays[n];
                 for(int strategyIndex=0;strategyIndex<n;++strategyIndex) {
                     plays[strategyIndex]=new Plays();
-                    plays[strategyIndex].maxFiles=staticMaxFiles;
-                    plays[strategyIndex].maxFiles=5;
                     Strategy strategy=strategies.get(strategyIndex);
                     Plays plays_=plays[strategyIndex];
-                    System.out.println("map size; "+plays_.map.size());
+                    //System.out.println("map size; "+plays_.map.size());
                     // moved code was here
                     Play play=plays_.new Play(filename);
                     play.prices=prices;
@@ -366,9 +388,11 @@ public class Plays {
                         if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
                         //System.out.println("dt: "+(System.nanoTime()-play.t0));
                         // updates will co-mingle different buys.
+                        System.out.println(play);
                         play.update();
                     }
                     combinedMap.putAll(plays_.map); // combine results from different strategies.
+                    //System.out.println("combined map has: "+combinedMap.size()+" elements.");
                 } // end of for each strategy
                 boolean writeBuys=false;
                 if(writeBuys) for(int i=0;i<n;++i) {
@@ -379,15 +403,8 @@ public class Plays {
                     // in the single cvs file for each file 
                     // or one big file!
                     Play.toCSV(plays_.map);
-                    toCsvFile(plays_.map,"buy"+"."+filename+"."+periodIndexi1+".csv");
+                    toCsvFile(plays_.map,"buy"+"."+filename+"."+period+".csv");
                 }
-                //r.summary(r.map,"out.csv");
-                /*
-                System.out.println(">>>>>>>>>>>>>>>>>>");
-                System.out.println("map sze: "+r.map.size());
-                System.out.println("map: "+r.map);
-                System.out.println("key set: "+r.map.keySet());
-                */
             } // end of for each time period.
               //if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
         } // end of for each file.
@@ -410,7 +427,6 @@ public class Plays {
     int verbosity=0; // for the outer class
     // initializers
     int startAt=0;
-    int maxFiles=Integer.MAX_VALUE;
     int buffer=5,forecast=3;
     double initialBankroll=1;
     // accumulators
