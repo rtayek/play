@@ -128,7 +128,7 @@ probably should write some tests to see if this agrees with the r code.
 
 maybe make dates start a the beginning of the year.
 
-looks like it may be working with date and indices ranges!
+added  timePeriodIndices. seems to work with both with date and indices time periods!
 
 
 

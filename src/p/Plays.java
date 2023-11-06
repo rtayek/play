@@ -202,7 +202,7 @@ public class Plays {
             hBuyRate.add(buyRate());
             double key=-bankroll()+jitter(); // hack key so it's unique
             if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
-            map.put(key,this);
+            if(bankroll()>1.2) map.put(key,this);
         }
         public void prologue() {
             System.out.format("min:  %4d, nax: %4d\n" //
@@ -285,7 +285,7 @@ public class Plays {
     }
     public static void main(String[] args) throws IOException {
         System.out.println("enter main()");
-        staticMaxFiles=5;
+        //staticMaxFiles=100;
         /*
         System.out.println("make some stocks");
         SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
@@ -333,7 +333,7 @@ public class Plays {
                 continue;
             }
             ArrayList<Pair> pairs=null;
-            boolean useDates=false;
+            boolean useDates=true;
             if(useDates) {
                 pairs=timePeriodDates(rows);
             } else {

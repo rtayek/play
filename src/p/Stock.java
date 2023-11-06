@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -68,7 +69,7 @@ class Stock {
         System.out.println("exchages sorted by number of stocks in them");
         for(Integer n:sortedExchanges.keySet()) System.out.println(n+"\t"+sortedExchanges.get(n));
     }
-    static List<String[]> readStocks() {
+    public static List<String[]> readStocks() {
         List<String[]> rows=null;
         Path csvFile=yahooPath;
         Reader reader;
