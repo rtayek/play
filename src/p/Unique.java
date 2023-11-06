@@ -42,13 +42,4 @@ public class Unique {
             System.out.println(toCsvLine(stocks.get(i)));
         }
     }
-    static String toCsvLine(String[] row) {
-        StringBuffer sb=new StringBuffer();
-        for(int i=0;i<row.length;++i) {
-            if(i>0) sb.append(", ");
-            sb.append(row[i]);
-        }
-        return sb.toString();
-                
-    }
 }

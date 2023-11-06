@@ -13,16 +13,22 @@ import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Pair;
 public class CSV { // utilities
     public String[] names() { return names; }
-    @Override public String toString() { // can never work!
-        if(true) throw new RuntimeException("ops");
-        // needs data for the format strings
+    public String header() {
         StringBuffer stringBuffer=new StringBuffer();
-        boolean once=false;
-        for(Pair pair:pairs) {
-            if(!once) once=true;
-            else stringBuffer.append(", ");
-            System.out.println("pair: "+pair);
-            String s=String.format((String)pair.second,(String)pair.first);
+        for(int i=0;i<pairs.size();++i) {
+            if(i>0) stringBuffer.append(", ");
+            String s=((String)pairs.get(i).first);
+            stringBuffer.append(s);
+        }
+        return stringBuffer.toString();
+    }
+    public String toString(Object... arguments) {
+        StringBuffer stringBuffer=new StringBuffer();
+        for(int i=0;i<Math.min(arguments.length,pairs.size());++i) {
+            if(i>0) stringBuffer.append(", ");
+            Pair pair=pairs.get(i);
+            //System.out.println(pair.first+","+pair.second);
+            String s=String.format((String)pairs.get(i).second,arguments[i]);
             stringBuffer.append(s);
         }
         return stringBuffer.toString();
@@ -121,6 +127,14 @@ public class CSV { // utilities
         for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
         return prices;
     }
+    static String toCsvLine(String[] row) {
+        StringBuffer sb=new StringBuffer();
+        for(int i=0;i<row.length;++i) {
+            if(i>0) sb.append(", ");
+            sb.append(row[i]);
+        }
+        return sb.toString();
+    }
     public static String toLine(String[] names,Object[] objects) {
         // can this use toString somehow?
         StringBuffer s=new StringBuffer();
@@ -169,26 +183,6 @@ public class CSV { // utilities
         Integer stop=indexOf(lines,to);
         Pair pair=new Pair(start,stop);
         return pair;
-    }
-    public String header() {
-        StringBuffer stringBuffer=new StringBuffer();
-        for(int i=0;i<pairs.size();++i) {
-            if(i>0) stringBuffer.append(", ");
-            String s=((String)pairs.get(i).first);
-            stringBuffer.append(s);
-        }
-        return stringBuffer.toString();
-    }
-    public String toString(Object... arguments) {
-        StringBuffer stringBuffer=new StringBuffer();
-        for(int i=0;i<Math.min(arguments.length,pairs.size());++i) {
-            if(i>0) stringBuffer.append(", ");
-            Pair pair=pairs.get(i);
-            //System.out.println(pair.first+","+pair.second);
-            String s=String.format((String)pairs.get(i).second,arguments[i]);
-            stringBuffer.append(s);
-        }
-        return stringBuffer.toString();
     }
     public static void main(String[] args) {
         Plays plays=new Plays();
