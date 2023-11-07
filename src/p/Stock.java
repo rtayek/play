@@ -92,14 +92,15 @@ class Stock {
         return rows;
     }
     public static void main(String[] args) throws IOException,CsvException {
-        //
+        // find the init stuff and put into init();
+        // read unusual or  maybe unique 
+        //  and show exchange frequency
     }
     String ticker="",name="",exchange="",categoryName="",country="",x="",y="",z="";
     Integer frequency;
     // Ticker,Name,Exchange,Category Name,Country
     static final int tickerINdex=0,nameIndex=1,exchangeIndex=2,categoryIndex=3,countryIndex=4;
     static final TreeMap<String,Stock> stocks=new TreeMap<>(); // map from ticker to stock.
-    // maybe use unique combination of ticker, strategy, start date?
     static final TreeMap<String,Integer> exchannges=new TreeMap<>();// map from exchange to frequency.
     static final TreeMap<Integer,String> sortedExchanges=new TreeMap<>();
     // the frequencies above may not be unique.

@@ -130,33 +130,7 @@ maybe make dates start a the beginning of the year.
 
 added  timePeriodIndices. seems to work with both with date and indices time periods!
 
+made Unique class to get unique stocks from a buy all file.
+maybe make a CSV instance for the yahoo.csv file format.
 
-
-
-
- 
-
-
-			
-			
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+refactored some of the csv utilities. started a list of excluded stocks.

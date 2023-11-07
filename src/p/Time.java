@@ -13,7 +13,10 @@ public class Time {
     public static void main(String[] args) throws IOException {
         System.out.println("enter main()");
         Stock.sortExchangesByFrequency();
-        String ticker="AAPL";
+        String ticker=null;
+        ticker="YZC.F";
+        ticker="AALB.AS";
+        ticker="VLXC";
         final List<String[]> rows=getNewPrices(ticker);
         //String f=rows.get(1)[0];
         //String t=rows.get(rows.size()-1)[0];
@@ -22,6 +25,8 @@ public class Time {
         TreeMap<Comparable<?>,Play> map=new TreeMap<>();
         // maybe generate a list of (from,to) pairs
         ArrayList<Pair> pairs=timePeriodDates(rows);
+        // this starts at the earliest date
+        // make it go backwards!
         for(Pair pair:pairs) {
             //for(int i=1990;i<=2022;++i) {
             //System.out.println("enter loop");
@@ -55,6 +60,6 @@ public class Time {
                 System.out.println(play.toCSVLine());
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
-        Plays.toCsvFile(Plays.combinedMap,"time.csv");
+        Plays.toCsvFile(Plays.combinedMap.values(),"time.csv");
     }
 }

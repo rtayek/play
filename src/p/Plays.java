@@ -115,6 +115,7 @@ public class Plays {
             return arguments;
         }
         public String toCSVLine() { // combine  with ?
+            // or inline?
             String s=result.toString(arguments());
             if(false) s+=String.format(", \"%s\"",hProfit());
             return s;
@@ -157,32 +158,12 @@ public class Plays {
                 //throw new RuntimeException("no activity for stock: "+name);
             }
         }
-        public static StringWriter toCSV(SortedMap<Comparable<?>,Play> map) throws IOException {
-            // maybe use values()? - just the Play[]?
-            // maybe move to plays?
-            StringWriter w=new StringWriter();
-            w.write(result.header()+'\n');
-            for(Object d:map.keySet()) {
-                Play play=map.get(d);
-                if(play.hProfit.n()>0) {
-                    // System.out.println(play); // seems to work ok
-                    w.write(play.toCSVLine());
-                    w.write('\n');
-                } else {
-                    System.out.println("omitting: "+play.ticker()+" add buy, add date"); // never prints!
-                    // because empties are not put into plays.map
-                    throw new RuntimeException("omitting: "+play.ticker());
-                }
-            }
-            //w.write(Play.header()+'\n');
-            w.close();
-            return w;
-        }
         public static void toConsole(SortedMap<Comparable<?>,Play> map) {
             System.out.println(result.header());
             for(Object d:map.keySet()) System.out.println(map.get(d));
         }
-        public static void toCsv(SortedMap<Comparable<?>,Play> map) {
+        public static void toCSV(SortedMap<Comparable<?>,Play> map) {
+            // use map vales in these guys!
             System.out.println(result.header());
             for(Object d:map.keySet()) System.out.println(map.get(d).toCSVLine());
         }
@@ -228,10 +209,29 @@ public class Plays {
         public double rake=.0;
         public int verbosity=0;
     } // end of class Play
-    static void toCsvFile(SortedMap<Comparable<?>,Play> map,String filename) throws IOException {
+    public static StringWriter toCSV(Collection<Play> plays) throws IOException {
+        StringWriter w=new StringWriter();
+        w.write(result.header()+'\n');
+        for(Play play:plays) {
+            if(play.hProfit.n()>0) {
+                // System.out.println(play); // seems to work ok
+                w.write(play.toCSVLine());
+                w.write('\n');
+            } else {
+                System.out.println("omitting: "+play.ticker()+" add buy, add date"); // never prints!
+                // because empties are not put into plays.map
+                throw new RuntimeException("omitting: "+play.ticker());
+            }
+        }
+        //w.write(Play.header()+'\n');
+        //w.close();
+        return w;
+    }
+    static void toCsvFile(Collection<Play> plays,String filename) throws IOException {
         if(filename!=null) {
-            System.out.println("writing: "+map.size()+" entries to: "+filename);
-            StringWriter w=Play.toCSV(map); // maybe pass values in?
+            System.out.println("writing: "+plays.size()+" entries to: "+filename);
+            StringWriter w=toCSV(plays); // maybe pass values in?
+            w.close();
             File file=new File(filename);
             FileWriter fw=new FileWriter(file);
             fw.write(w.toString());
@@ -248,7 +248,7 @@ public class Plays {
         System.out.println("buy rate: "+hBuyRate);
         //Play.toConsole(Play.map);
         try {
-            toCsvFile(map,filename);
+            toCsvFile(map.values(),filename);
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -256,6 +256,8 @@ public class Plays {
     }
     public void filenames(String filename) throws IOException {
         // maybe pass in map and make static so other programs can use this?
+        // maybe just call the static version?
+        // maybe not, this is not used much.
         StringWriter w=new StringWriter();
         for(Object d:map.keySet()) {
             Play play=map.get(d);
@@ -341,13 +343,14 @@ public class Plays {
             }
             System.out.println("number of time periods: "+pairs.size());
             if(pairs.size()==0) { System.out.println("no time periods"); continue; }
+            Collections.reverse(pairs);
             Pair pair=pairs.get(0);
             System.out.println("first time period: "+pair.first+"  "+pair.second);
             System.out.println(pairs);
             int maxPeriods=2;
             int periods=Math.min(maxPeriods,pairs.size());
             for(int period=0;period<periods;++period) { // will be date ranges/indices  periods
-                System.out.println("time period: "+pairs.get(period));
+                System.out.println("period: "+period+", time period: "+pairs.get(period));
                 Double[] prices=null;
                 MyDate myDateStart=null;
                 if(useDates) {
@@ -398,8 +401,8 @@ public class Plays {
                     // now we will have time period and strategy
                     // in the single cvs file for each file 
                     // or one big file!
-                    Play.toCSV(plays_.map);
-                    toCsvFile(plays_.map,"buy"+"."+filename+"."+period+".csv");
+                    toCSV(plays_.map.values());
+                    toCsvFile(plays_.map.values(),"buy"+"."+filename+"."+period+".csv");
                 }
             } // end of for each time period.
               //if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
@@ -417,7 +420,7 @@ public class Plays {
         System.out.println("map:");
         //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;
-        if(writeBig) Plays.toCsvFile(combinedMap,"newbuyall.csv");
+        if(writeBig) Plays.toCsvFile(combinedMap.values(),"newbuyall.csv");
     }
     int verbosity=0; // for the outer class
     // initializers

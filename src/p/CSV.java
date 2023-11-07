@@ -1,16 +1,21 @@
 package p;
 import static p.CSV.getCSV;
 import static p.DataPaths.newPrices;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Pair;
+import p.Plays.Play;
 public class CSV { // utilities
     public String[] names() { return names; }
     public String header() {
@@ -127,7 +132,7 @@ public class CSV { // utilities
         for(int i=0;i<n;++i) prices[i]=Double.valueOf(lines.get(i)[4]);
         return prices;
     }
-    static String toCsvLine(String[] row) {
+    static String toCSVLine(String[] row) {
         StringBuffer sb=new StringBuffer();
         for(int i=0;i<row.length;++i) {
             if(i>0) sb.append(", ");
@@ -135,8 +140,25 @@ public class CSV { // utilities
         }
         return sb.toString();
     }
+    public static StringWriter toCSV(List<String[]> rows) throws IOException {
+        StringWriter w=new StringWriter();
+        for(String[] row:rows) {
+            w.write(toCSVLine(row));
+            w.write('\n');
+        }
+        return w;
+    }
+    static void toCSV(List<String[]> rows,String filename) throws IOException {
+        if(filename!=null) {
+            StringWriter w=toCSV(rows);
+            w.close();
+            File file=new File(filename);
+            FileWriter fw=new FileWriter(file);
+            fw.write(w.toString());
+            fw.close();
+        }
+    }
     public static String toLine(String[] names,Object[] objects) {
-        // can this use toString somehow?
         StringBuffer s=new StringBuffer();
         for(int i=0;i<names.length;++i) {
             if(i>0) s.append(", ");
