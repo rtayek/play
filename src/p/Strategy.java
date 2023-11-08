@@ -63,7 +63,7 @@ public class Strategy {
         double dy3=p3-p2;
         double dy4=p4-p3;
         boolean rc=dy2>0&&dy3>0&&dy4>0;
-        rc=rc&&dy3>dy2;
+        rc=rc&&dy3>dy2&&dy4>dy3;// require a bigger delta for both (was just one).
         return rc;
         //return dy4>0&&d2y4>0; // maybe needs more constraints?
     };

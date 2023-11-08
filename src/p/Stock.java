@@ -1,10 +1,12 @@
 package p;
 import static p.DataPaths.yahooPath;
+import static p.Stock.*;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import com.opencsv.exceptions.CsvException;
 class Stock {
     Stock(String[] words) {
@@ -69,9 +72,14 @@ class Stock {
         System.out.println("exchages sorted by number of stocks in them");
         for(Integer n:sortedExchanges.keySet()) System.out.println(n+"\t"+sortedExchanges.get(n));
     }
-    public static List<String[]> readStocks() {
-        List<String[]> rows=null;
+    public static ArrayList<String[]> stocks() { return yahoo; }
+    private static ArrayList<String[]> readYahooStocks() {
         Path csvFile=yahooPath;
+        ArrayList<String[]> rows=readStocks(csvFile);
+        return rows;
+    }
+    private static ArrayList<String[]> readStocks(Path csvFile) {
+        List<String[]> rows=null;
         Reader reader;
         try {
             reader=new FileReader(csvFile.toString());
@@ -80,7 +88,7 @@ class Stock {
                 rows=r.readAll();
                 //for(String[] row:rows) System.out.println(Arrays.asList(row));
                 for(String[] row:rows) if(row.length!=5) System.out.println(Arrays.asList(row));
-                System.out.println(rows.size()+" rows");
+                //System.out.println(rows.size()+" rows");
             } catch(IOException e) {
                 e.printStackTrace();
             } catch(CsvException e) {
@@ -89,45 +97,97 @@ class Stock {
         } catch(FileNotFoundException e) {
             e.printStackTrace();
         }
-        return rows;
+        ArrayList<String[]> stocks=new ArrayList<>(); // much faster than List!
+        for(String[] row:rows) stocks.add(row);
+        return stocks;
+    }
+    public static boolean isTickerExcluded(String ticker) {
+        if(excludedStocks.contains(ticker)) return true;
+        return false;
+    }
+    public static boolean isExchangeExcluded(String exchange) {
+        if(excludedExchanges.contains(exchange)) return true;
+        return false;
+    }
+    public static boolean isExcluded(Stock stock) {
+        if(isExchangeExcluded(stock.exchange)) return true;
+        if(isTickerExcluded(stock.ticker)) return true;
+        return false;
+    }
+    static void buildMap(ArrayList<String[]> stocks,TreeMap<String,Stock> map) {
+        for(int i=1;i<stocks.size();++i) { // skip header
+            String[] words=stocks.get(i);
+            Stock stock=new Stock(words);
+            map.put(words[0].trim(),stock); // using ticker here
+        }
     }
     public static void main(String[] args) throws IOException,CsvException {
+        System.out.println("----------------");
+        System.out.println(isExchangeExcluded("YZC.F"));
+        Stock stock=yahooStocks.get("YZC.F");
+        System.out.println(stock);
+        System.out.println(isTickerExcluded("BOTY"));
+        stock=yahooStocks.get("BOTY");
+        System.out.println(stock);
         // find the init stuff and put into init();
         // read unusual or  maybe unique 
         //  and show exchange frequency
+        sortExchangesByFrequency();
+        printSortedExchanges();
     }
     String ticker="",name="",exchange="",categoryName="",country="",x="",y="",z="";
     Integer frequency;
     // Ticker,Name,Exchange,Category Name,Country
     static final int tickerINdex=0,nameIndex=1,exchangeIndex=2,categoryIndex=3,countryIndex=4;
-    static final TreeMap<String,Stock> stocks=new TreeMap<>(); // map from ticker to stock.
+    static final TreeMap<String,Stock> yahooStocks=new TreeMap<>(); // map from ticker to stock.
+    static final TreeSet<String> excludedExchanges=new TreeSet<>();
+    static {
+        excludedExchanges.add("PNK"); // excludes about 7k stocks.
+    }
+    static final TreeSet<String> excludedStocks=new TreeSet<>();
+    static {
+        excludedStocks.add("YZC.F"); // stopped trading
+    }
     static final TreeMap<String,Integer> exchannges=new TreeMap<>();// map from exchange to frequency.
     static final TreeMap<Integer,String> sortedExchanges=new TreeMap<>();
     // the frequencies above may not be unique.
     // only the lasts exchange will  appear.
     // maybe use Map<Integer,List<String>>?
     static int empty;
+    static final ArrayList<String[]> yahoo=readYahooStocks();
     static {
-        List<String[]> rows=readStocks();
-        int n=rows.get(0).length;
-        for(String[] words:rows) {
-            Stock stock=new Stock(words);
-            stocks.put(words[0],stock); // using ticker here
-        }
-        Iterator<String> keys=stocks.keySet().iterator();
+        buildMap(yahoo,yahooStocks);
+        /*
+        Iterator<String> keys=yahooStocks.keySet().iterator();
         int samples=0;
         for(int i=0;i<samples;++i) {
             //while(keys.hasNext()) {
             String key=keys.next();
-            System.out.println(key+" "+stocks.get(key));
+            System.out.println(key+" "+yahooStocks.get(key));
         }
-        System.out.println(Stock.stocks.size()+" stocks.");
-        System.out.println(empty+" stocks have empty exchanges!.");
-        System.out.println(exchannges.size()+" exchanges");
-        System.out.println("frequency of exchangeoccurrence: "+Stock.exchannges);
-        System.out.println("header: "+Arrays.asList(rows.get(0)));
-        System.out.println("first row: "+Arrays.asList(rows.get(1)));
-        System.out.println("last row: "+Arrays.asList(rows.get(rows.size()-1)));
-        System.out.println("end of static initialization.");
+        */
+        if(false) {
+            System.out.println(yahooStocks.size()+" stocks.");
+            System.out.println(empty+" stocks have empty exchanges!.");
+            System.out.println(exchannges.size()+" exchanges");
+            System.out.println("frequency of exchangeoccurrence: "+Stock.exchannges);
+            System.out.println("header: "+Arrays.asList(yahoo.get(0)));
+            System.out.println("first row: "+Arrays.asList(yahoo.get(1)));
+            System.out.println("last row: "+Arrays.asList(yahoo.get(yahoo.size()-1)));
+            System.out.println("end of static initialization.");
+        }
+    }
+    static Path here=Paths.get("");
+    static Path nyqFile=Path.of(here.toString(),"nyq.csv");
+    static final ArrayList<String[]> nyq=readStocks(nyqFile);
+    static final TreeMap<String,Stock> nyqStocks=new TreeMap<>(); // map from ticker to stock.
+    static {
+        buildMap(nyq,nyqStocks);
+    }
+    static Path nmsFile=Path.of(here.toString(),"nms.csv");
+    static final ArrayList<String[]> nms=readStocks(nmsFile);
+    static final TreeMap<String,Stock> nmsStocks=new TreeMap<>(); // map from ticker to stock.
+    static {
+        buildMap(nms,nmsStocks);
     }
 }

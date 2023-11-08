@@ -102,23 +102,23 @@ public class CSV { // utilities
         //System.out.println("last line: "+Arrays.asList(l.get(l.size()-1)));
         return l;
     }
-    public static List<String[]> getCSV(Path path,String filename) {
+    public static List<String[]> getCSV(Path path,String filename) throws IOException,CsvException {
         Path csvFile=Path.of(path.toString(),filename);
         Reader reader;
         List<String[]> rows=null;
-        try {
-            reader=new FileReader(csvFile.toString());
-            com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
-            rows=r.readAll();
-        } catch(IOException|CsvException e) {
-            e.printStackTrace();
-        }
+        reader=new FileReader(csvFile.toString());
+        com.opencsv.CSVReader r=new com.opencsv.CSVReader(reader);
+        rows=r.readAll();
         return rows;
     }
     public static List<String[]> getNewPrices(String ticker) {
         String filename=ticker+".csv";
-        List<String[]> rows=getCSV(newPrices,filename);
-        //System.out.println(ticker+" has: "+rows.size()+" rows");
+        List<String[]> rows=null;
+        try {
+            rows=getCSV(newPrices,filename);
+        } catch(IOException|CsvException e) {
+            System.err.println("caught: "+e);
+        }
         return rows;
     }
     public static Double[] getClosingPrices(List<String[]> lines) {

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import com.opencsv.exceptions.CsvException;
 public class Unique {
     static Integer find(ArrayList<String[]> yahoo,String target) {
         Integer found=null;
@@ -16,7 +17,8 @@ public class Unique {
         }
         return found;
     }
-    static void makeUnbiqueFRomBuyAll() throws IOException {
+    static void makeUnbiqueFRomBuyAll() throws IOException, CsvException {
+        // make a .csv like the yahoo.csv with unique stocks.
         Path path=Paths.get("");
         List<String[]> rows=getCSV(path,"newbuyall.csv");
         System.out.println(rows.size()+" rows.");
@@ -38,17 +40,12 @@ public class Unique {
         if(stocks.size()>0) for(int i=0;i<stocks.size();++i) { System.out.println(toCSVLine(stocks.get(i))); }
         toCSV(stocks,"uniquefromnewbuyall.csv");
     }
-    public static void main(String[] args) throws IOException {
-        // make a .csv like the yahoo .csv with unique stocks.
+    public static void main(String[] args) throws IOException, CsvException {
         //makeUnbiqueFRomBuyAll();
         //if(true) return;
         Path path=Paths.get("");
         List<String[]> rows=getCSV(path,"unusual.csv");
+        // not sure what to do with this?
         System.out.println(rows.size()+" rows.");
-    }
-    static final ArrayList<String[]> yahoo=new ArrayList<>(); // much faster than List!
-    static {
-        List<String[]> y=readStocks();
-        for(String[] row:y) yahoo.add(row);
     }
 }

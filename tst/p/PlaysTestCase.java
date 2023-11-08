@@ -4,21 +4,23 @@ import static p.CSV.getCSV;
 import static p.CSV.getClosingPrices;
 import static p.DataPaths.newPrices;
 import static p.Strategy.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.opencsv.exceptions.CsvException;
 import p.Plays.Play;
 class PlaysTestCase {
     @BeforeEach void setUpn() throws Exception { plays.buffer=3; }
     @AfterEach void tearDown() throws Exception {}
-    @Test void testApple() {
+    @Test void testApple() throws IOException, CsvException {
         Play play=Apple.apple();
         //assertEquals(1.1618703003602524,play.bankroll); // old buy2 with <=
         assertEquals(1.1540557154982802,play.bankroll); // old buy2 with <=
         }
-    @Test void testApple2() {
+    @Test void testApple2() throws IOException, CsvException {
         Path path=newPrices;
         String filename="AAPL.csv";
         Double[] prices=null;

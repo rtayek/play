@@ -7,6 +7,7 @@ import static p.Strategy.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.*;
 import com.opencsv.exceptions.CsvException;
 import com.tayek.util.Histogram;
@@ -17,7 +18,7 @@ public class Plays {
         public enum What { win, tie, lose }
         public static String getExchange(String filename) { // hack
             String ticker=removeTarget(filename,".csv");
-            Stock stock=stocks.get(ticker);
+            Stock stock=yahooStocks.get(ticker);
             String exchange=stock!=null?stock.exchange:"";
             return exchange;
         }
@@ -183,7 +184,7 @@ public class Plays {
             hBuyRate.add(buyRate());
             double key=-bankroll()+jitter(); // hack key so it's unique
             if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
-            if(bankroll()>1.2) map.put(key,this);
+            if(bankroll()>threshold) map.put(key,this);
         }
         public void prologue() {
             System.out.format("min:  %4d, nax: %4d\n" //
@@ -200,7 +201,6 @@ public class Plays {
         public /*final*/ String filename; // so we can change it for different strategies.
         public transient int buys,wins,losses,ties;
         public transient double bankroll=initialBankroll;
-        // make bankroll a list or array?
         public transient Histogram hProfit=new Histogram(10,0,.10);
         public transient double totalRake=0;
         public final double bet=initialBankroll; // amount of bankroll to bet.
@@ -270,7 +270,7 @@ public class Plays {
         fw.write(w.toString());
         fw.close();
     }
-    public static List<String> files(Path path) {
+    public static List<String> getFilenames(Path path) {
         List<String> files;
         System.out.println("files are in: "+path);
         File dir=path.toFile();
@@ -285,36 +285,19 @@ public class Plays {
                 ,Math.sqrt(histogram.variance()) //
         );
     }
-    public static void main(String[] args) throws IOException {
-        System.out.println("enter main()");
-        //staticMaxFiles=100;
-        /*
-        System.out.println("make some stocks");
-        SortedMap<String,Stock> some=stocks.entrySet().stream().limit(3).collect(TreeMap::new,
-                (m,e)->m.put(e.getKey(),e.getValue()),Map::putAll);
-        System.out.println("some stocks: "+some);
-        */
-        //Stock.printExchanges();
-        Stock.sortExchangesByFrequency();
-        //Stock.printSortedExchanges();
-        //if(true) return;
-        ArrayList<Strategy> strategies=strategies();
-        int n=strategies.size();
-        // one(prices,strategies)
-        // one(file,timePeriods,strategies)
-        // some/run(files,timePeriods,strategies)
-        // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
-        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
-        Path path=Paths.get(rPath.toString(),"data","prices");
-        path=newPrices;
-        List<String> files=Plays.files(path);
-        System.out.println(files.size()+" files.");
-        System.out.println("start of processing filenames.");
+    static void processFiles(ArrayList<Strategy> strategies,int n,Path path,List<String> files) throws IOException {
+        // we may only need one Plays here?
+        for(int i=0;i<Math.min(files.size(),10);++i) System.out.println(files.get(i));
         for(int index=0;index<files.size();++index) {
             if(index>=staticMaxFiles) break;
+            List<String[]> rows=null;
             String filename=files.get(index);
-            List<String[]> rows=getCSV(path,filename);
+            try {
+                rows=getCSV(path,filename);
+            } catch(Exception e) {
+                System.out.println(e);
+                continue;
+            }
             System.out.println("index: "+index+", file: "+filename+" has "+rows.size()+" rows.");
             if(rows.size()<=1) { System.out.println(filename+" has: "+rows.size()+" rows!"); continue; }
             if(rows.size()<=2) { System.out.println(filename+" has: "+rows.size()+" rows!"); continue; }
@@ -347,7 +330,7 @@ public class Plays {
             Pair pair=pairs.get(0);
             System.out.println("first time period: "+pair.first+"  "+pair.second);
             System.out.println(pairs);
-            int maxPeriods=2;
+            int maxPeriods=1;
             int periods=Math.min(maxPeriods,pairs.size());
             for(int period=0;period<periods;++period) { // will be date ranges/indices  periods
                 System.out.println("period: "+period+", time period: "+pairs.get(period));
@@ -407,7 +390,47 @@ public class Plays {
             } // end of for each time period.
               //if(index>0&&index%1000==0) System.out.println("index: "+index+", bankroll: "+r.hBankroll);
         } // end of for each file.
-          // write a csv file here.
+    }
+    static ArrayList<String> addExtension(Collection<String> tickers,String extension) {
+        ArrayList<String> some=new ArrayList<>();
+        for(String ticker:tickers) some.add(ticker+extension);
+        return some;
+    }
+    static ArrayList<String> topNYQGilenames() throws IOException,CsvException {
+        List<String[]> topNYQTickers=getCSV(here,"topnyq.csv");
+        topNYQTickers.remove(0); //remove header
+        ArrayList<String> topTickers=new ArrayList<>();
+        for(int i=0;i<topNYQTickers.size()/8;++i) // using half now
+            // maybe we can just take the top half of all of them?
+            // that way we do not need so much code here
+            topTickers.add(topNYQTickers.get(i)[0].trim());
+        ArrayList<String> topNYQFilenames=addExtension(topTickers,".csv");
+        return topNYQFilenames;
+    }
+    public static void main(String[] args) throws IOException,CsvException {
+        System.out.println("enter main()");
+        Stock.sortExchangesByFrequency();
+        //Stock.printSortedExchanges();
+        //if(true) return;
+        ArrayList<Strategy> strategies=strategies();
+        int n=strategies.size();
+        // one(prices,strategies)
+        // one(file,timePeriods,strategies)
+        // some/run(files,timePeriods,strategies)
+        // let's try to construct the play earlier so we can set stuff like verbosity, max files etc.
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+        // @SuppressWarnings("unused") List<String> forceInitialization=datasetFilenames;
+        Path path=newPrices;
+        List<String> filenames=getFilenames(path);
+        System.out.println(filenames.size()+" files.");
+        System.out.println("start of processing filenames.");
+        String[] tickers=new String[] {"NFLX","AAPL","META","GOOG","AMZN"};
+        ArrayList<String> some=addExtension(Arrays.asList(tickers),".csv");
+        for(int i=0;i<Math.min(some.size(),10);++i) System.out.println(some.get(i));
+        some.get(0); // ?
+        ArrayList<String> topNYQFilenames=topNYQGilenames();
+        //processFiles(strategies,n,path,filenames);
+        processFiles(strategies,n,path,topNYQFilenames);
         System.out.println("end of processing filenames.");
         //System.out.println(r.skippedFiles+" skipped files.");
         /*
@@ -420,7 +443,17 @@ public class Plays {
         System.out.println("map:");
         //Play.toCsv(combinedMap); // to sysout
         boolean writeBig=true;
-        if(writeBig) Plays.toCsvFile(combinedMap.values(),"newbuyall.csv");
+        if(writeBig) toCsvFile(combinedMap.values(),"newbuyall.csv");
+        // get unique tickers
+        LinkedHashSet<String> unique=new LinkedHashSet<>();
+        for(Comparable<?> key:combinedMap.keySet()) {
+            Play play=combinedMap.get(key);
+            if(!unique.contains(play.ticker))
+                unique.add(play.ticker);
+        }
+        System.out.println("unique: ");
+        for(String string:unique)
+            System.out.println(string);
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -429,11 +462,13 @@ public class Plays {
     double initialBankroll=1;
     // accumulators
     Random random=new Random();
-    TreeMap<Comparable<?>,Play> map=new TreeMap<>();
-    Histogram hBankroll=new Histogram(10,0,10);
-    Histogram hExpectation=new Histogram(10,0,1);
-    Histogram hWinRate=new Histogram(10,0,1);
-    Histogram hBuyRate=new Histogram(10,0,1);
+    TreeMap<Comparable<?>,Play> map=new TreeMap<>(); // updated by play.update()
+    // accumulators
+    final double threshold=1.3;
+    final Histogram hBankroll=new Histogram(10,0,10);
+    final Histogram hExpectation=new Histogram(10,0,1);
+    final Histogram hWinRate=new Histogram(10,0,1);
+    final Histogram hBuyRate=new Histogram(10,0,1);
     static int minSize=260,maxsize=260;
     static int skippedFiles=0; // may need to be static
     static int staticMaxFiles=Integer.MAX_VALUE;

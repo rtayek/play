@@ -1,6 +1,7 @@
 package p;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static p.CSV.*;
+import static p.Plays.*;
 import static p.Strategy.*;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +61,6 @@ public class Time {
                 System.out.println(play.toCSVLine());
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
-        Plays.toCsvFile(Plays.combinedMap.values(),"time.csv");
+        toCsvFile(Plays.combinedMap.values(),"time.csv");
     }
 }

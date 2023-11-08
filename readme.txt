@@ -1,4 +1,5 @@
 made on 10/7/23 from /d/ray/allEclipseProjects/_javamiscellaneous/src/compoundinterest
+source of stock data: https://investexcel.net/all-yahoo-finance-stock-tickers/
 old notes:
 
 8/23/23 notices that bankroll and mean profit do not seem to correlate that much.
@@ -134,3 +135,14 @@ made Unique class to get unique stocks from a buy all file.
 maybe make a CSV instance for the yahoo.csv file format.
 
 refactored some of the csv utilities. started a list of excluded stocks.
+
+should we exclude stocks when building the map or require later code to avoid them?
+
+let's just use nyq and nms exchanges.
+experiment with other strategies. predict with a curve fit or finite differences.
+require a certain amount of positive delta?
+
+remove exchange from my output .csv files.
+
+see how these work over time
+
