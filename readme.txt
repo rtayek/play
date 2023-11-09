@@ -146,3 +146,5 @@ remove exchange from my output .csv files.
 
 see how these work over time
 
+maybe set this up so it takes a collection of strategies and time periods as well as the collection of files.
+

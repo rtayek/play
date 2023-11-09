@@ -178,16 +178,17 @@ class Stock {
         }
     }
     static Path here=Paths.get("");
-    static Path nyqFile=Path.of(here.toString(),"nyq.csv");
-    static final ArrayList<String[]> nyq=readStocks(nyqFile);
+    static Path nyqPath=Path.of(here.toString(),"nyq.csv");
+    static final ArrayList<String[]> nyq=readStocks(nyqPath);
     static final TreeMap<String,Stock> nyqStocks=new TreeMap<>(); // map from ticker to stock.
     static {
         buildMap(nyq,nyqStocks);
     }
-    static Path nmsFile=Path.of(here.toString(),"nms.csv");
-    static final ArrayList<String[]> nms=readStocks(nmsFile);
+    static final Path nmsFPath=Path.of(here.toString(),"nms.csv");
+    static final ArrayList<String[]> nms=readStocks(nmsFPath);
     static final TreeMap<String,Stock> nmsStocks=new TreeMap<>(); // map from ticker to stock.
     static {
         buildMap(nms,nmsStocks);
     }
+    static final Path newTopNYQPath=Path.of(here.toString(),"newTopNYQ.csv");
 }

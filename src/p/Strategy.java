@@ -23,7 +23,7 @@ public class Strategy {
         //buys.add(buy1);
         strategies.add(strategy2);
         strategies.add(strategy3);
-        strategies.add(strategy3b);
+        //strategies.add(strategy3b);
         //buys.add(buy4);
         return strategies;
     }
