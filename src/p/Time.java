@@ -16,12 +16,13 @@ public class Time {
         Stock.sortExchangesByFrequency();
         String ticker=null;
         //TPVG
-        ticker="AAPL";
         ticker="CTR";
         ticker="OII";
         ticker="LXU";
         ticker="SKT";
         ticker="LC";
+        ticker="AAPL";
+        ticker="GHL";
         final List<String[]> rows=getNewPrices(ticker);
         sample(rows);
         String f=rows.get(1)[0];
@@ -70,7 +71,13 @@ public class Time {
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
         if(combinedMap.size()>0) {
-            toCsvFile(Plays.combinedMap.values(),"time.csv");
+            toCsvFile(combinedMap.values(),"time.csv");
+            TreeMap<Comparable<?>,Play> timeOrdered=new TreeMap<>();
+            for(Comparable<?> key:combinedMap.keySet()) {
+                Play play=combinedMap.get(key);
+                timeOrdered.put(play.date.date(),play);
+            }
+            toCsvFile(timeOrdered.values(),"orderedtime.csv");
         } else System.out.println("no plays!");
         plays.summary(plays.map,"doesnt.matter"); // needs different plays
         System.out.println(plays.map.size());

@@ -41,6 +41,19 @@ public class Plays {
         }
         public void sell(double boughtAt,int index,double amountBet) { // add bought price, then recurse
             double current=prices[index];
+            int n=4;
+            // x's will be index index-4 .. index -1
+            // y's will be corresponding prices
+            System.out.println(prices.length+" prices.");
+            System.out.println("index: "+index);
+            Double[] x=new Double[n];
+            for(int i=0;i<n;++i) x[i]=(double)index-n+i;
+            Double[] y=new Double[n];
+            for(int i=0;i<n;++i) y[i]=prices[index-n+i];
+            System.out.println(Arrays.asList(x));
+            System.out.println(Arrays.asList(y));
+            double predicted=ForwardDifferences.extrapolate(index,n,x,y);
+            System.out.println("predicted: "+predicted+", error: "+(predicted-current)+", relative: "+(predicted-current)/current);
             double change=current-boughtAt;
             Play.What whatHappened=change>0?win:change==0?tie:lose;
             switch(whatHappened) {
@@ -148,6 +161,7 @@ public class Plays {
         public Histogram hProfit() { return hProfit; }
         void oneStock(Strategy strategy) {
             double boughtAt=0;
+            verbosity=2;
             if(verbosity>0) System.out.println("-----------------------");
             if(verbosity>0) System.out.println(prices.length+" prices.");
             for(int i=buffer;i<prices.length-forecast;++i) {
@@ -339,21 +353,18 @@ public class Plays {
             ArrayList<Pair> pairs=null;
             boolean useDates=true;
             if(useDates) {
-                pairs=timePeriodDates(rows,false);
+                pairs=timePeriodDates(rows,true);
             } else {
                 pairs=timePeriodIndices(rows);
             }
             //System.out.println("number of time periods: "+pairs.size());
             if(pairs.size()==0) { System.out.println("no time periods"); continue; }
             Collections.reverse(pairs);
-            Pair pair=pairs.get(0);
-            //System.out.println("first time period: "+pair.first+"  "+pair.second);
-            //System.out.println(pairs);
-            int maxPeriods=2;
+            int maxPeriods=1;
             int periods=Math.min(maxPeriods,pairs.size());
             for(int period=0;period<periods;++period) { // will be date ranges/indices  periods
                 if(false&&periods==1) {
-                    period=1; // just do 2021
+                    period=0; // just do 2022
                     if(pairs.size()==1) continue;
                 }
                 System.out.println("period: "+period+", time period: "+pairs.get(period));
@@ -424,6 +435,8 @@ public class Plays {
         List<String> filenames=getFilenames(path);
         System.out.println(filenames.size()+" price files in: "+path+".");
         System.out.println("start of processing filenames.");
+        String[] oneTicker=new String[] {"AAPL"};
+        ArrayList<String> one=addExtension(Arrays.asList(oneTicker),".csv");
         String[] tickers=new String[] {"NFLX","AAPL","META","GOOG","AMZN"};
         ArrayList<String> some=addExtension(Arrays.asList(tickers),".csv");
         //for(int i=0;i<Math.min(some.size(),10);++i) System.out.println(some.get(i));

@@ -155,5 +155,11 @@ maybe do time by quarter?
 maybe extrapolate using finite differences.
 made forward differences and a test case for it.
 
+find a really good year and see  what happens when it goes bad.
+hard to say each quarter can vary a lot.
+so try to make better buy strategies.
+
+
+
 
 
