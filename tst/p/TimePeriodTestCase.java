@@ -1,6 +1,5 @@
 package p;
 import static org.junit.jupiter.api.Assertions.*;
-import static p.CSV.getNewPrices;
 import static p.Strategy.strategy2;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,11 +17,31 @@ class TimePeriodTestCase {
     @Test void test() { // this may break if the data changes
         String ticker="AAPL";
         final List<String[]> rows=getNewPrices(ticker);
-        ArrayList<Pair> pairs=timePeriodDates(rows);
-        for(Pair pair:pairs) { 
-            System.out.println(pair.first+"  "+pair.second);
-            // lets convert to indices and try to convert back.
-            
-            }
+        ArrayList<Pair> pairs=timePeriodDates(rows,false);
+        assertEquals("1990-01-01",pairs.get(0).first.toString());
+        assertEquals("1991-01-01",pairs.get(0).second.toString());
+    }
+    @Test void testQuarter() { // this may break if the data changes
+        String ticker="AAPL";
+        final List<String[]> rows=getNewPrices(ticker);
+        ArrayList<Pair> pairs=timePeriodDates(rows,true);
+        assertEquals("1990-01-01",pairs.get(0).first.toString());
+        assertEquals("1990-04-01",pairs.get(0).second.toString());
+    }
+    @Test void testFilterWithQuarterTimePeriods() { // this may break if the data changes
+        String ticker="AAPL";
+        final List<String[]> rows=getNewPrices(ticker);
+        String first=rows.get(1)[0];
+        String last=rows.get(rows.size()-1)[0];
+        System.out.println(first+" - "+last);
+        ArrayList<Pair> pairs=timePeriodDates(rows,true);
+        for(Pair pair:pairs) {
+            MyDate from=new MyDate(pair.first.toString());
+            MyDate to=new MyDate(pair.second.toString());
+            System.out.println("pair: from: "+from+" to: "+to);
+            List<String[]> inRange=filter(rows,from.date(),to.date());
+            System.out.println(inRange.size()+" rows  in range of time period.");
+            break;
+        }
     }
 }

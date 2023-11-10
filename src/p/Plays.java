@@ -175,7 +175,7 @@ public class Plays {
             for(String name=br.readLine();name!=null;name=br.readLine()) list.add(name);
             return list;
         }
-        public double jitter() { return random.nextGaussian(0,1e-7); }
+        public double jitter() { return random.nextGaussian(0,1e-6); }
         public void update() { // values now in outer class
             // this is fine where it it.
             hBankroll.add(bankroll());
@@ -184,7 +184,7 @@ public class Plays {
             hBuyRate.add(buyRate());
             double key=-bankroll()+jitter(); // hack key so it's unique
             if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
-            if(bankroll()>threshold) map.put(key,this);
+            map.put(key,this);
         }
         public void prologue() {
             System.out.format("min:  %4d, nax: %4d\n" //
@@ -339,7 +339,7 @@ public class Plays {
             ArrayList<Pair> pairs=null;
             boolean useDates=true;
             if(useDates) {
-                pairs=timePeriodDates(rows);
+                pairs=timePeriodDates(rows,false);
             } else {
                 pairs=timePeriodIndices(rows);
             }
@@ -465,7 +465,7 @@ public class Plays {
     // accumulators
     Random random=new Random();
     TreeMap<Comparable<?>,Play> map=new TreeMap<>(); // updated by play.update()
-    double threshold=1.3;
+    double threshold=0;
     // accumulators
     final Histogram hBankroll=new Histogram(10,0,10);
     final Histogram hExpectation=new Histogram(10,0,1);

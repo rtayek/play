@@ -147,4 +147,13 @@ remove exchange from my output .csv files.
 see how these work over time
 
 maybe set this up so it takes a collection of strategies and time periods as well as the collection of files.
+maybe add histogram  of high-low to indicate variance?
+
+high variance over years for each stock.
+maybe do time by quarter?
+11/09/23
+maybe extrapolate using finite differences.
+made forward differences and a test case for it.
+
+
 

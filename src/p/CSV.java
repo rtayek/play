@@ -55,7 +55,7 @@ public class CSV { // utilities
         }
         return pairs;
     }
-    public static ArrayList<Pair> timePeriodDates(final List<String[]> rows) {
+    public static ArrayList<Pair> timePeriodDates(final List<String[]> rows,boolean byQuarter) {
         List<String> header=Arrays.asList(rows.get(0));
         //System.out.println("row 1: "+Arrays.asList(rows.get(1)));
         String f=rows.get(1)[0];
@@ -70,11 +70,34 @@ public class CSV { // utilities
         // maybe generate a list of (from,to) pairs
         ArrayList<Pair> pairs=new ArrayList<>();
         for(int i=year1;i<yearn;++i) { //
-            MyDate from=new MyDate(i+"-01-01");
-            MyDate to=new MyDate((i+1)+"-01-01"); // maybe use 02-01?
-            //System.out.println(from+" to "+to);
-            Pair pair=new Pair(from,to);
-            pairs.add(pair);
+            if(byQuarter) {
+                MyDate from=new MyDate(i+"-01-01");
+                MyDate to=new MyDate((i)+"-04-01"); // maybe use 02-01?
+                //System.out.println(from+" to "+to);
+                Pair pair=new Pair(from,to);
+                pairs.add(pair);
+                from=new MyDate(i+"-04-01");
+                to=new MyDate((i)+"-07-01"); // maybe use 02-01?
+                //System.out.println(from+" to "+to);
+                pair=new Pair(from,to);
+                pairs.add(pair);
+                from=new MyDate(i+"-07-01");
+                to=new MyDate((i)+"-10-01"); // maybe use 02-01?
+                //System.out.println(from+" to "+to);
+                pair=new Pair(from,to);
+                pairs.add(pair);
+                from=new MyDate(i+"-10-01");
+                to=new MyDate((i+1)+"-01-01"); // maybe use 02-01?
+                //System.out.println(from+" to "+to);
+                pair=new Pair(from,to);
+                pairs.add(pair);
+            } else {
+                MyDate from=new MyDate(i+"-01-01");
+                MyDate to=new MyDate((i+1)+"-01-01"); // maybe use 02-01?
+                //System.out.println(from+" to "+to);
+                Pair pair=new Pair(from,to);
+                pairs.add(pair);
+            }
         }
         return pairs;
     }
@@ -92,14 +115,8 @@ public class CSV { // utilities
         for(int i=1;i<lines.size();++i) {
             String[] line=lines.get(i);
             MyDate myDate=new MyDate(line[0]);
-            if(MyDate.inRange(from,myDate.date(),to)) {
-                //System.out.println(i+" adding: "+myDate);
-                l.add(line);
-            }
+            if(MyDate.inRange(from,myDate.date(),to)) l.add(line);
         }
-        //System.out.println("first line: "+Arrays.asList(l.get(0)));
-        //System.out.println("second line: "+Arrays.asList(l.get(1)));
-        //System.out.println("last line: "+Arrays.asList(l.get(l.size()-1)));
         return l;
     }
     public static List<String[]> getCSV(Path path,String filename) throws IOException,CsvException {
@@ -111,6 +128,12 @@ public class CSV { // utilities
         rows=r.readAll();
         return rows;
     }
+    static void sample(final List<String[]> rows) {
+        System.out.println(Arrays.asList(rows.get(0)));
+        System.out.println(Arrays.asList(rows.get(1)));
+        System.out.println(Arrays.asList(rows.get(rows.size()-1)));
+    }
+
     public static List<String[]> getNewPrices(String ticker) {
         String filename=ticker+".csv";
         List<String[]> rows=null;

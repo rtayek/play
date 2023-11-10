@@ -15,36 +15,43 @@ public class Time {
         System.out.println("enter main()");
         Stock.sortExchangesByFrequency();
         String ticker=null;
-        ticker="YZC.F";
-        ticker="AALB.AS";
-        ticker="VLXC";
+        //TPVG
+        ticker="AAPL";
+        ticker="CTR";
+        ticker="OII";
+        ticker="LXU";
+        ticker="SKT";
+        ticker="LC";
         final List<String[]> rows=getNewPrices(ticker);
-        //String f=rows.get(1)[0];
-        //String t=rows.get(rows.size()-1)[0];
-        //System.out.println("f: "+f+",  t: "+t);
+        sample(rows);
+        String f=rows.get(1)[0];
+        String t=rows.get(rows.size()-1)[0];
+        System.out.println("f: "+f+",  t: "+t);
         Strategy strategy=strategy2;
         TreeMap<Comparable<?>,Play> map=new TreeMap<>();
         // maybe generate a list of (from,to) pairs
-        ArrayList<Pair> pairs=timePeriodDates(rows);
+        ArrayList<Pair> pairs=timePeriodDates(rows,true);
         // this starts at the earliest date
-        // make it go backwards!
+        // make it go backwards?
+        System.out.println(pairs);
+        System.out.println(pairs.size()+" timer pairs.");
+        Plays plays=new Plays();
+        int i=0;
         for(Pair pair:pairs) {
-            //for(int i=1990;i<=2022;++i) {
-            //System.out.println("enter loop");
-            //MyDate from=new MyDate(i+"-01-01");
-            //MyDate to=new MyDate((i+1)+"-01-01"); // maybe use 02-01?
+            //if(++i>5) break;
             MyDate from=new MyDate(pair.first.toString());
             MyDate to=new MyDate(pair.second.toString());
-            //System.out.println("from: "+from+" to: "+to);
-            List<String[]> timePeriod=filter(rows,from.date(),to.date());
+            // System.out.println("pair: from: "+from+" to: "+to);
+            List<String[]> inRange=filter(rows,from.date(),to.date());
+            //System.out.println(inRange.size()+" rows  in range of timer period.");
             //List<String> firstRowOfPart=Arrays.asList(timePeriod.get(0));
             //System.out.println("first row of this part: "+firstRowOfPart);
             //List<String> secondRowOfPart=Arrays.asList(timePeriod.get(1));
             //System.out.println("second row of this part: "+secondRowOfPart);
-            MyDate myDate=new MyDate(timePeriod.get(1)[0]);
-            Double[] prices=getClosingPrices(timePeriod);
+            if(inRange.size()<=1) { System.out.println("no rows in data range from: "+from+" to: "+to); continue; }
+            MyDate myDate=new MyDate(inRange.get(1)[0]);
+            Double[] prices=getClosingPrices(inRange);
             if(prices.length>0) {
-                Plays plays=new Plays();
                 Play play=plays.new Play(ticker);
                 play.prices=prices;
                 play.rake=.0;
@@ -55,12 +62,18 @@ public class Time {
                 if(play.hProfit.n()>0) {
                     if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
                     play.update();
-                }
-                Plays.combinedMap.putAll(plays.map); // combine results
-                //System.out.println(play);
+                } else System.out.println("no plays!");
+                // add to time map so these come out in order!
+                // or just build a new map from combined map.
+                combinedMap.putAll(plays.map); // combine results
                 System.out.println(play.toCSVLine());
             } else System.out.println("no prices for: from: "+from+" to: "+to);
         }
-        toCsvFile(Plays.combinedMap.values(),"time.csv");
+        if(combinedMap.size()>0) {
+            toCsvFile(Plays.combinedMap.values(),"time.csv");
+        } else System.out.println("no plays!");
+        plays.summary(plays.map,"doesnt.matter"); // needs different plays
+        System.out.println(plays.map.size());
+        System.out.println(combinedMap.size());
     }
 }

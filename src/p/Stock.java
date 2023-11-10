@@ -190,5 +190,5 @@ class Stock {
     static {
         buildMap(nms,nmsStocks);
     }
-    static final Path newTopNYQPath=Path.of(here.toString(),"newTopNYQ.csv");
+    static final Path newTopNYQPath=Path.of(here.toString(),"newtopnyq.csv");
 }
