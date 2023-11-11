@@ -1,10 +1,10 @@
 package p;
 import java.util.Arrays;
-class ForwardDifferences {
+//https://www.geeksforgeeks.org/newton-forward-backward-interpolation/
+class ForwardDifferences { // https://en.wikipedia.org/wiki/Finite_difference
     //calculating u mentioned in the formula
     static double u_cal(double u,int n) { double temp=u; for(int i=1;i<n;i++) temp=temp*(u-i); return temp; }
-    //calculating factorial of given number n
-    static int fact(int n) { int f=1; for(int i=2;i<=n;i++) f*=i; return f; }
+    static int factorial(int n) { int f=1; for(int i=2;i<=n;i++) f*=i; return f; }
     static void print(int n,double[] x,double[][] y) {
         for(int i=0;i<n;i++) {
             System.out.print(x[i]+"\t");
@@ -24,7 +24,7 @@ class ForwardDifferences {
         double[][] yy=buildDifferences(n,x,y);
         double sum=yy[0][0];
         double u=(value-x[0])/(x[1]-x[0]);
-        for(int i=1;i<n;i++) { sum=sum+(u_cal(u,i)*yy[0][i])/fact(i); }
+        for(int i=1;i<n;i++) { sum=sum+(u_cal(u,i)*yy[0][i])/factorial(i); }
         return sum;
     }
     static double cubic(double x) { double rc=(x*x*x+3*x*x-6*x-8)/4; return rc; }
@@ -68,9 +68,16 @@ class ForwardDifferences {
         System.out.println("extrapolated value: y("+value+")="+z);
         System.out.println("cubic value: "+cubic(value));
         System.out.println("-----------");
-        value=x[n-2]; // one time step into the past
-        z=extrapolate(value,n,x,y);
-        System.out.println("extrapolated value: y("+value+")="+z);
-        System.out.println("cubic value: "+cubic(value));
+        double value2=x[n-1]+2./(n-1)/2; // one half time step into the future
+        double z2=extrapolate(value2,n,x,y);
+        System.out.println("extrapolated value: y("+value2+")="+z2);
+        System.out.println("cubic value: "+cubic(value2));
+        System.out.println("-----------");
+        if(false) {
+            value=x[n-2]; // one time step into the past
+            z=extrapolate(value,n,x,y);
+            System.out.println("extrapolated value: y("+value+")="+z);
+            System.out.println("cubic value: "+cubic(value));
+        }
     }
 }

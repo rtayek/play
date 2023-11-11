@@ -39,21 +39,29 @@ public class Plays {
             double profit=(current-boughtAt)/boughtAt;
             return profit;
         }
-        public void sell(double boughtAt,int index,double amountBet) { // add bought price, then recurse
-            double current=prices[index];
-            int n=4;
-            // x's will be index index-4 .. index -1
+        double extrapolate(int index,int n) { // x's will be index index-n .. index -1
             // y's will be corresponding prices
-            System.out.println(prices.length+" prices.");
-            System.out.println("index: "+index);
+            //System.out.println(prices.length+" prices.");
+            //System.out.println("index: "+index);
             Double[] x=new Double[n];
             for(int i=0;i<n;++i) x[i]=(double)index-n+i;
             Double[] y=new Double[n];
             for(int i=0;i<n;++i) y[i]=prices[index-n+i];
-            System.out.println(Arrays.asList(x));
-            System.out.println(Arrays.asList(y));
+            //System.out.println(Arrays.asList(x));
+            //System.out.println(Arrays.asList(y));
             double predicted=ForwardDifferences.extrapolate(index,n,x,y);
-            System.out.println("predicted: "+predicted+", error: "+(predicted-current)+", relative: "+(predicted-current)/current);
+            return predicted;
+        }
+        public void sell(double boughtAt,int index,double amountBet) { // add bought price, then recurse
+            double current=prices[index];
+            int n=4;
+            double predicted=extrapolate(index,n);
+            double ae=Math.abs(predicted-current);
+            this.ae.add(ae);
+            double are=Math.abs((predicted-current)/current);
+            this.are.add(are);
+            System.out.println(
+                    "predicted: "+predicted+", error: "+(predicted-current)+", relative: "+(predicted-current)/current);
             double change=current-boughtAt;
             Play.What whatHappened=change>0?win:change==0?tie:lose;
             switch(whatHappened) {
@@ -78,8 +86,8 @@ public class Plays {
             if(verbosity>1)
                 System.out.format("profit %6.3f, br %7.3f, bought at %6.3f, current %6.3f, $ %6.3f, rake %7.3f\n",
                         profit,bankroll,boughtAt,current,current-boughtAt,rake);
-            if(verbosity>1) System.out
-                    .println(index+", buys: "+buys+", wins: "+wins+", ties "+ties+", losses "+losses+", br: "+bankroll);
+            if(verbosity>1) System.out.println("price index: "+index+", buys: "+buys+", wins: "+wins+", ties "+ties
+                    +", losses "+losses+", br: "+bankroll);
         }
         double change() {
             if(prices==null) throw new RuntimeException("prices is null!");
@@ -125,7 +133,8 @@ public class Plays {
                     // need  buy, date,
                     // no, we now have ticker and filename
                     // maybe just use ticker and add filename
-                    bankroll(),strategyName(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
+                    bankroll(),ae.mean(),are.mean(),
+                    strategyName(),eProfit(),sdProfit(),pptd(),winRate(),buyRate(),days(),};
             return arguments;
         }
         public String toCSVLine() { // combine  with ?
@@ -161,9 +170,9 @@ public class Plays {
         public Histogram hProfit() { return hProfit; }
         void oneStock(Strategy strategy) {
             double boughtAt=0;
-            verbosity=2;
+            //verbosity=2;
             if(verbosity>0) System.out.println("-----------------------");
-            if(verbosity>0) System.out.println(prices.length+" prices.");
+            if(verbosity>0) System.out.println(ticker+" has: "+prices.length+" prices.");
             for(int i=buffer;i<prices.length-forecast;++i) {
                 if(bankroll<0) { System.out.println("broke!"); break; }
                 boughtAt=oneDay(strategy.buy,i,boughtAt);
@@ -196,6 +205,8 @@ public class Plays {
             hExpectation.add(hProfit().mean());
             hWinRate.add(winRate());
             hBuyRate.add(buyRate());
+            hAE.add(ae.mean());
+            hARE.add(are.mean());
             double key=-bankroll()+jitter(); // hack key so it's unique
             if(map.containsKey(key)) throw new RuntimeException("dup;licate key!");
             map.put(key,this);
@@ -216,6 +227,8 @@ public class Plays {
         public transient int buys,wins,losses,ties;
         public transient double bankroll=initialBankroll;
         public transient Histogram hProfit=new Histogram(10,0,.10);
+        final Histogram ae=new Histogram(10,0,100); // absolute error.
+        final Histogram are=new Histogram(10,0,1); // relative absolute error.
         public transient double totalRake=0;
         public final double bet=initialBankroll; // amount of bankroll to bet.
         // won't be changing for a while. 10/29/23 maybe not.
@@ -260,6 +273,8 @@ public class Plays {
         System.out.println("bankroll: "+toString(hBankroll));
         System.out.println("win rate: "+hWinRate);
         System.out.println("buy rate: "+hBuyRate);
+        System.out.println("AE: "+hAE);
+        System.out.println("ARE: "+hARE);
         //Play.toConsole(Play.map);
         if(false) try {
             toCsvFile(map.values(),filename);
@@ -398,8 +413,11 @@ public class Plays {
                     play.date=myDateStart;
                     //if(index==0) play.prologue(); // before
                     play.oneStock(strategy);
+                    //if(play.verbosity>1)
                     if(play.hProfit.n()>0) {
-                        if(play.verbosity>1) System.out.println("profit: "+play.hProfit());
+                        System.out.println("profit: "+play.hProfit());
+                        System.out.println("AE: "+play.ae);
+                        System.out.println("ARE: "+play.are);
                         //System.out.println(play);
                         play.update();
                     }
@@ -466,9 +484,11 @@ public class Plays {
             ; //else System.out.println("duplicate: "+play.ticker);
         }
         FileWriter fileWriter=new FileWriter(newTopNYQPath.toFile());
+        // bad file name??
         fileWriter.write("Ticker\n");
         for(String string:unique) fileWriter.write(string+'\n');
         fileWriter.close();
+        System.out.println("exit main.");
     }
     int verbosity=0; // for the outer class
     // initializers
@@ -484,6 +504,8 @@ public class Plays {
     final Histogram hExpectation=new Histogram(10,0,1);
     final Histogram hWinRate=new Histogram(10,0,1);
     final Histogram hBuyRate=new Histogram(10,0,1);
+    final Histogram hAE=new Histogram(10,0,100); // absolute error.
+    final Histogram hARE=new Histogram(10,0,1); // relative absolute error.
     // end of accumulators
     static int minSize=260,maxsize=260;
     static int skippedFiles=0; // may need to be static
@@ -496,6 +518,8 @@ public class Plays {
             pairs.add(new Pair("date","%-10s"));
             pairs.add(new Pair("change","%7.2f"));
             pairs.add(new Pair("bankroll","%7.3f"));
+            pairs.add(new Pair("ae","%7.2f"));
+            pairs.add(new Pair("are","%7.2f"));
             pairs.add(new Pair("buy","%-5s"));
             pairs.add(new Pair("eProfit","%6.3f"));
             pairs.add(new Pair("sdProfit","%6.3f"));
