@@ -51,6 +51,7 @@ public class Strategy {
         double p2=prices[index-3];
         double p3=prices[index-2];
         double p4=prices[index-1];
+        // require some minimum relative delta and compare
         return p1<p2&&p2<p3&&p3<p4;
     };
     public static final BiPredicate<Integer,Double[]> buy3b=(index,prices)-> {
@@ -63,9 +64,9 @@ public class Strategy {
         double dy3=p3-p2;
         double dy4=p4-p3;
         boolean rc=dy2>0&&dy3>0&&dy4>0;
+        // require some minimum relative delta and compare
         rc=rc&&dy3>dy2&&dy4>dy3;// require a bigger delta for both (was just one).
         return rc;
-        //return dy4>0&&d2y4>0; // maybe needs more constraints?
     };
     public static final BiPredicate<Integer,Double[]> buy4=(index,prices)-> {
         if(index<5) throw new RuntimeException("not enought prices for buy!");

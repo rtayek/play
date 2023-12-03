@@ -159,6 +159,11 @@ find a really good year and see  what happens when it goes bad.
 hard to say each quarter can vary a lot.
 so try to make better buy strategies.
 
+maybe always do predictions?
+
+12/02/23 moved to new machine. trying nms exchanges.
+
+
 
 
 

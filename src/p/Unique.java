@@ -17,7 +17,7 @@ public class Unique {
         }
         return found;
     }
-    static void makeUnbiqueFRomBuyAll() throws IOException, CsvException {
+    static void makeUnbiqueFromBuyAll() throws IOException, CsvException {
         // make a .csv like the yahoo.csv with unique stocks.
         Path path=Paths.get("");
         List<String[]> rows=getCSV(path,"newbuyall.csv");

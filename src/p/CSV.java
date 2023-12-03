@@ -69,7 +69,7 @@ public class CSV { // utilities
         //System.out.println(year1+" to "+yearn);
         // maybe generate a list of (from,to) pairs
         ArrayList<Pair> pairs=new ArrayList<>();
-        for(int i=year1;i<yearn;++i) { //
+        for(int i=year1;i<=yearn;++i) { // make this <= so we get 2023.
             if(byQuarter) {
                 MyDate from=new MyDate(i+"-01-01");
                 MyDate to=new MyDate((i)+"-04-01"); // maybe use 02-01?
